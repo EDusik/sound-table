@@ -1,81 +1,165 @@
-# SoundTable
+<h1 align="center">🎲 SoundTable</h1>
+<p align="center">
+  <strong>Create the perfect soundscape for every RPG session.</strong>
+</p>
+<p align="center">
+  <a href="#-getting-started">Getting started</a> •
+  <a href="#-configuration">Configuration</a> •
+  <a href="#-tech-stack">Tech stack</a> •
+  <a href="#-features">Features</a>
+</p>
 
-Frontend-only web app: Google auth, rooms with labels, and audio lists from public URLs. No custom backend; uses Firebase (optional) and localStorage or Firestore.
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind-4-38B2AC?style=flat-square&logo=tailwind-css" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Supabase-2-3ECF8E?style=flat-square&logo=supabase" alt="Supabase" />
+  <img src="https://img.shields.io/badge/Zustand-5-764ABC?style=flat-square" alt="Zustand" />
+</p>
 
-## Features
+### Dashboard
 
-- **Auth**: Google OAuth (Firebase Auth) or local demo mode
-- **Dashboard**: List your rooms (title, subtitle, colored labels)
-- **Create room**: Title, subtitle, labels with color picker
-- **Room page** (`/room/[id]`): Audio list with search, play/pause/stop, volume, loop
-- **Global audio bar**: Fixed bottom bar when any audio is playing; pause/stop from there
-- **Storage**: localStorage (default) or Firestore (client SDK only)
+<p align="center">
+  <img src="./github/images/SoundTable1.png" alt="SoundTable demo" width="720" />
+</p>
 
-## Setup
+## Room
 
-1. **Install and run (no config)**
+<p align="center">
+  <img src="./github/images/SoundTable2.png" alt="SoundTable demo" width="720" />
+</p>
 
+---
+
+## 🚀 Getting started
+
+### Prerequisites
+
+- **Node.js** 18+ and **npm** (or yarn/pnpm)
+
+### Option 1 — Quick (no setup)
+
+Works out of the box with data stored only in the browser (localStorage):
+
+```bash
+git clone <repo-url>
+cd project
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). On the login screen, use **“Continue with local storage (no account)”**. Everything is saved only in your browser.
+
+### Option 2 — With account (Supabase)
+
+For Google login and cloud data:
+
+1. Create a project at [Supabase](https://supabase.com).
+2. Create a `.env` file in the project root (use [.env.example](#environment-variables) as a template) and set:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. In Supabase: **Authentication → Providers** → enable **Google** and configure Client ID and Secret from Google Cloud.
+4. In [Google Cloud Console](https://console.cloud.google.com): under OAuth 2.0 **Credentials**, add to **Authorized redirect URIs**:
+   ```text
+   https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback
+   ```
+   (replace `YOUR_PROJECT_REF` with your Supabase project ref.)
+5. Create the database tables: in Supabase **SQL Editor**, run the contents of `supabase/migrations/20250305000000_rooms_audios.sql` (or use `supabase db push` if you have the CLI).
+6. Run again:
    ```bash
-   npm install
    npm run dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000). Use **“Continue with local storage (no account)”** on the login page. Data is stored in the browser only.
+---
 
-2. **Optional: Google sign-in (Supabase)**
+## ⚙️ Configuration
 
-   - Create a [Supabase project](https://supabase.com) and add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env`.
-   - In Supabase: **Authentication → Providers** → enable **Google** and paste your Google OAuth Client ID and Client Secret.
-   - In [Google Cloud Console](https://console.cloud.google.com): **APIs & Services → Credentials** → your OAuth 2.0 Client ID → **Authorized redirect URIs**. Add **exactly** this URL (replace `YOUR_PROJECT_REF` with your Supabase project ref from the dashboard URL):
-     ```
-     https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback
-     ```
-     Example: `https://adglgkgudriqouudhamt.supabase.co/auth/v1/callback`.  
-     **Error 400: redirect_uri_mismatch** means this URI is missing or different in Google Cloud.
+### Environment variables
 
-   - In Supabase **Authentication → URL Configuration**, add your app URLs to **Redirect URLs** (e.g. `http://localhost:3000/auth/callback`).
+Copy `.env.example` to `.env` (or `.env.local`) and adjust as needed. **All are optional** to run in “localStorage only” mode.
 
-   - **Create the database tables** (required for rooms/audios with Supabase). Otherwise you'll see *"Could not find the table 'public.rooms' in the schema cache"*.
-     - **Option A:** In Supabase Dashboard go to **SQL Editor** → New query → paste and run the contents of `supabase/migrations/20250305000000_rooms_audios.sql`.
-     - **Option B:** If you use [Supabase CLI](https://supabase.com/docs/guides/cli), run `supabase db push` from the project root (or link the project and run migrations).
+| Variable                                   | Description                                                                                                            |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                 | Supabase project URL (e.g. `https://xxx.supabase.co`)                                                                  |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`            | Supabase anonymous key (Authentication + DB)                                                                           |
+| `NEXT_PUBLIC_FREESOUND_API_KEY`            | Enables search on [Freesound](https://freesound.org) on the room page ([get token](https://freesound.org/apiv2/apply)) |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`             | Firebase: API Key (optional)                                                                                           |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`         | Firebase: Auth Domain                                                                                                  |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`          | Firebase: Project ID                                                                                                   |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`      | Firebase: Storage Bucket                                                                                               |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase: Messaging Sender ID                                                                                          |
+| `NEXT_PUBLIC_FIREBASE_APP_ID`              | Firebase: App ID                                                                                                       |
+| `NEXT_PUBLIC_USE_FIRESTORE`                | `"true"` to use Firestore instead of localStorage                                                                      |
+| `NEXT_PUBLIC_FREE_ACCESS`                  | `"false"` to disable access without login (default: allowed)                                                           |
 
-3. **Optional: Firebase and Firestore**
+### Firebase / Firestore (optional)
 
-   - Create a [Firebase project](https://console.firebase.google.com/)
-   - Enable **Authentication** → Sign-in method → **Google**
-   - Copy env vars from Project settings into `.env.local` (see `.env.example`)
-   - For **Firestore**: create a Firestore database, then set `NEXT_PUBLIC_USE_FIRESTORE=true` in `.env.local`
-   - Deploy security rules from `firestore.rules` (Firebase Console → Firestore → Rules)
+- Create a project at [Firebase](https://console.firebase.google.com), enable **Authentication** (Google) and optionally **Firestore**.
+- Fill in the `NEXT_PUBLIC_FIREBASE_*` variables in `.env`.
+- For Firestore: create the database and set `NEXT_PUBLIC_USE_FIRESTORE=true`.
+- Deploy the rules in `firestore.rules` (Console → Firestore → Rules). If you use queries by `userId` and `orderBy('createdAt')`, create the composite index when the console/CLI prompts you.
 
-   If you use Firestore with a `rooms` query by `userId` and `orderBy('createdAt')`, create a composite index when the CLI or console prompts you.
+---
 
-## Environment variables
+## 🛠 Tech stack
 
-See `.env.example`. All are optional:
+| Layer                     | Technology                                                                                                               |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Framework**             | [Next.js 16](https://nextjs.org) (App Router)                                                                            |
+| **UI**                    | [React 19](https://react.dev), [Tailwind CSS 4](https://tailwindcss.com)                                                 |
+| **Language**              | [TypeScript](https://www.typescriptlang.org)                                                                             |
+| **Auth & DB**             | [Supabase](https://supabase.com) (Auth + PostgreSQL); optional: [Firebase](https://firebase.google.com) Auth + Firestore |
+| **Global state (player)** | [Zustand](https://zustand-demo.pmnd.rs)                                                                                  |
+| **Backend**               | No custom server; client only (Supabase/Firebase SDK and localStorage)                                                   |
 
-- `NEXT_PUBLIC_FREESOUND_API_KEY`: Enables **Search Freesound** on the room page (search and add sounds from [Freesound](https://freesound.org)). Get a token at [freesound.org/apiv2/apply](https://freesound.org/apiv2/apply).
-- `NEXT_PUBLIC_FIREBASE_*`: Required for Google sign-in and Firestore
-- `NEXT_PUBLIC_USE_FIRESTORE`: Set to `"true"` to use Firestore instead of localStorage
+---
 
-## Audio sources
+## ✨ Features
 
-The app only stores **metadata** (name + URL). Use public/free audio URLs, for example:
+- **Authentication** — Google login (Supabase) or demo mode with local storage.
+- **Dashboard** — List of rooms with title, subtitle and colored tags; reorder by drag; edit and delete.
+- **Create room** — Title, subtitle and tags with color picker.
+- **Room page** (`/room/[id]`) — Audio list with search; play/pause/stop, volume and loop per item; add by URL or (with API key) Freesound search; YouTube support.
+- **Global audio bar** — Fixed bar at the bottom when any audio is playing; pause/stop control from any page.
+- **Storage** — localStorage (default), Supabase (PostgreSQL) or Firestore (optional).
 
-- [Tabletop Audio](https://tabletopaudio.com/) (ambient sounds)
-- [FreeSound](https://freesound.org/) (after creating an account, you can use direct links to preview files)
-- Any direct URL to an MP3 or supported audio file (e.g. royalty-free samples)
+### Audio sources
 
-Do not store audio files in the app; only the URL is saved.
+The app stores only **metadata** (name + URL). You can use:
 
-## Tech stack
+- [Tabletop Audio](https://tabletopaudio.com) (ambiences)
+- [Freesound](https://freesound.org) (with account and direct links or search with API key)
+- Any direct URL to MP3 or supported audio file
 
-- Next.js 16 (App Router), TypeScript, Tailwind CSS
-- Firebase Auth + optional Firestore (client SDK only)
-- Zustand for global audio player state
-- No custom backend or database server
+---
 
-## Scripts
+## 📜 Scripts
 
-- `npm run dev` – development
-- `npm run build` – production build
-- `npm run start` – run production build
+| Command         | Description                                                          |
+| --------------- | -------------------------------------------------------------------- |
+| `npm run dev`   | Development server at [http://localhost:3000](http://localhost:3000) |
+| `npm run build` | Production build                                                     |
+| `npm run start` | Run production build                                                 |
+| `npm run lint`  | Run ESLint                                                           |
+
+---
+
+## 📁 Project structure
+
+```text
+src/
+├── app/              # Routes (App Router)
+│   ├── login/        # Login screen
+│   ├── dashboard/    # Room list
+│   ├── create-room/  # Create new room
+│   └── room/[id]/    # Room page (audio)
+├── components/       # Reusable components
+├── contexts/         # AuthContext
+├── lib/              # Supabase, Firebase, storage, types
+├── store/            # Zustand (audioStore)
+docs/
+└── images/           # Screenshots and banner (add here)
+```
+
+---
