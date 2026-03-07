@@ -1,28 +1,53 @@
 @import "tailwindcss";
 
+/* Light mode (default) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #EEF2F7;
+  --foreground: #0F172A;
+  --card: #F8FAFC;
+  --border: #D8E0EA;
+  --primary: #14B8A6;
+  --accent: #F59E0B;
+  --accent-hover: #D97706;
+  --accent-soft: #FEF3C7;
+  --muted: #64748B;
+}
+
+/* Dark mode */
+.dark {
+  --background: #0F0E17;
+  --foreground: #F3F4F6;
+  --card: #1A1A2E;
+  --border: #2A2A40;
+  --primary: #14B8A6;
+  --accent: #14B8A6;
+  --accent-hover: #0D9488;
+  --accent-soft: #2DD4BF;
+  --muted: #9CA3AF;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-muted: var(--muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  cursor: pointer;
 }
 
 @keyframes slide-in-from-bottom {
@@ -38,4 +63,17 @@ body {
 
 .animate-in.slide-in-from-bottom {
   animation: slide-in-from-bottom 0.3s ease-out;
+}
+
+@keyframes dice-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-dice-rotate {
+  animation: dice-rotate 0.5s ease-in-out;
 }

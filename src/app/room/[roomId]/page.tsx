@@ -17,6 +17,7 @@ import { AudioRow } from "@/components/AudioRow";
 import { FreesoundSearch } from "@/components/FreesoundSearch";
 import { useAudioStore } from "@/store/audioStore";
 import { useAuth } from "@/contexts/AuthContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { extractYouTubeId } from "@/lib/youtube";
 
 export default function RoomPage() {
@@ -249,21 +250,21 @@ export default function RoomPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
       </div>
     );
   }
 
   if (error || !room) {
     return (
-      <div className="min-h-screen bg-zinc-950 px-4 py-8">
+      <div className="min-h-screen bg-background px-4 py-8">
         <div className="mx-auto max-w-xl rounded-lg bg-red-500/20 p-4 text-red-200">
           {error ?? "Room not found"}
         </div>
         <Link
           href="/dashboard"
-          className="mt-4 inline-block text-amber-400 hover:underline"
+          className="mt-4 inline-block text-accent hover:underline"
         >
           ← Dashboard
         </Link>
@@ -272,7 +273,7 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="bg-zinc-950 pb-32">
+    <div className="bg-background pb-32">
       {audioToDelete ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
@@ -282,18 +283,18 @@ export default function RoomPage() {
           onClick={closeDeleteModal}
         >
           <div
-            className="w-full max-w-sm rounded-xl border border-zinc-700 bg-zinc-900 p-5 shadow-xl"
+            className="w-full max-w-sm rounded-xl border border-border bg-card p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2
               id="delete-modal-title"
-              className="text-lg font-semibold text-white"
+              className="text-lg font-semibold text-foreground"
             >
               Delete sound
             </h2>
-            <p className="mt-2 text-sm text-zinc-400">
+            <p className="mt-2 text-sm text-muted">
               Are you sure you want to delete{" "}
-              <strong className="text-white">
+              <strong className="text-foreground">
                 &quot;{audioToDelete.name}&quot;
               </strong>
               ? This action cannot be undone.
@@ -303,7 +304,7 @@ export default function RoomPage() {
                 type="button"
                 onClick={closeDeleteModal}
                 disabled={deleting}
-                className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
+                className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-card disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -311,7 +312,7 @@ export default function RoomPage() {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-foreground hover:bg-red-500 disabled:opacity-50"
               >
                 {deleting ? "Deleting…" : "Delete"}
               </button>
@@ -328,20 +329,20 @@ export default function RoomPage() {
           onClick={() => setShowAddSoundModal(false)}
         >
           <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-xl"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
               <h2
                 id="add-sound-modal-title"
-                className="text-lg font-semibold text-white"
+                className="text-lg font-semibold text-foreground"
               >
                 Add sound
               </h2>
               <button
                 type="button"
                 onClick={() => setShowAddSoundModal(false)}
-                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                className="rounded-lg p-1 text-muted hover:bg-card hover:text-foreground"
                 aria-label="Close"
               >
                 <svg
@@ -370,33 +371,33 @@ export default function RoomPage() {
                   }}
                 />
               </div>
-              <details className="rounded-lg border border-zinc-700 bg-zinc-800/50">
-                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-300">
+              <details className="rounded-lg border border-border bg-card/50">
+                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-foreground">
                   Add Audio
                 </summary>
                 <form
                   onSubmit={handleAddAudio}
-                  className="space-y-3 border-t border-zinc-700 p-4"
+                  className="space-y-3 border-t border-border p-4"
                 >
                   <div>
-                    <label className="block text-xs text-zinc-400">Name</label>
+                    <label className="block text-xs text-white">Name</label>
                     <input
                       type="text"
                       value={addName}
                       onChange={(e) => setAddName(e.target.value)}
-                      className="mt-1 w-full rounded border border-zinc-600 bg-zinc-800 px-3 py-2 text-white"
+                      className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-foreground"
                       placeholder="e.g. Rain ambience"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-zinc-400">
+                    <label className="block text-xs text-white">
                       Source URL (public MP3/audio)
                     </label>
                     <input
                       type="url"
                       value={addUrl}
                       onChange={(e) => setAddUrl(e.target.value)}
-                      className="mt-1 w-full rounded border border-zinc-600 bg-zinc-800 px-3 py-2 text-white"
+                      className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-foreground"
                       placeholder="https://…"
                     />
                   </div>
@@ -406,29 +407,29 @@ export default function RoomPage() {
                   <button
                     type="submit"
                     disabled={adding}
-                    className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-zinc-900 disabled:opacity-50"
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
                   >
                     {adding ? "Adding…" : "Add"}
                   </button>
                 </form>
               </details>
-              <details className="rounded-lg border border-zinc-700 bg-zinc-800/50">
-                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-300">
+              <details className="rounded-lg border border-border bg-card/50">
+                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-foreground">
                   Add YouTube Audio
                 </summary>
                 <form
                   onSubmit={handleAddYouTubeAudio}
-                  className="space-y-3 border-t border-zinc-700 p-4"
+                  className="space-y-3 border-t border-border p-4"
                 >
                   <div>
-                    <label className="block text-xs text-zinc-400">
+                    <label className="block text-xs text-white">
                       YouTube link or ID
                     </label>
                     <input
                       type="text"
                       value={addYoutubeUrl}
                       onChange={(e) => setAddYoutubeUrl(e.target.value)}
-                      className="mt-1 w-full rounded border border-zinc-600 bg-zinc-800 px-3 py-2 text-white"
+                      className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-foreground"
                       placeholder="https://www.youtube.com/watch?v=…"
                     />
                   </div>
@@ -438,7 +439,7 @@ export default function RoomPage() {
                   <button
                     type="submit"
                     disabled={addingYoutube}
-                    className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-zinc-900 disabled:opacity-50"
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
                   >
                     {addingYoutube ? "Adding…" : "Add"}
                   </button>
@@ -448,12 +449,12 @@ export default function RoomPage() {
           </div>
         </div>
       ) : null}
-      <header className="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur">
-        <div className="mx-auto max-w-4xl px-4 py-2">
-          <div className="flex items-center justify-between gap-2">
+      <header className="sticky top-0 z-10 w-full border-b border-border bg-background backdrop-blur">
+        <div className="flex w-full items-center">
+          <div className="mx-auto flex max-w-6xl flex-1 items-center justify-between gap-2 px-4 py-2">
             <Link
               href="/dashboard"
-              className="text-sm text-zinc-400 hover:text-white"
+              className="text-sm text-muted hover:text-foreground"
             >
               ← Dashboard
             </Link>
@@ -461,12 +462,12 @@ export default function RoomPage() {
               <button
                 type="button"
                 onClick={() => setShowAddSoundModal(true)}
-                className="rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-medium text-zinc-900 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950"
+                className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-background hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
               >
                 Add sound
               </button>
               {user ? (
-                <span className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-2 text-sm text-zinc-200">
+                <span className="flex items-center gap-2 rounded-lg border border-border bg-card/80 px-2.5 py-2 text-sm text-foreground">
                   {user.photoURL ? (
                     <Image
                       src={user.photoURL}
@@ -476,7 +477,7 @@ export default function RoomPage() {
                       className="h-6 w-6 rounded-full object-cover"
                     />
                   ) : (
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/30 text-xs font-medium text-amber-200">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft/50 text-xs font-medium text-accent">
                       {(user.displayName ?? user.email ?? "?")[0].toUpperCase()}
                     </span>
                   )}
@@ -487,28 +488,31 @@ export default function RoomPage() {
               ) : null}
             </div>
           </div>
+          <div className="shrink-0 px-4 py-2">
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-4xl px-4">
+      <div className="mx-auto max-w-6xl px-4">
         <RoomTitleBlock room={room} />
       </div>
 
-      <main className="mx-auto max-w-4xl px-4 py-4">
+      <main className="mx-auto max-w-6xl px-4 py-4 bg-background">
         <div className="mb-4">
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Filter by audio name…"
-            className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-2.5 text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             aria-label="Filter audios in this room"
           />
         </div>
 
         <ul className="space-y-3">
           {filteredAudios.length === 0 && (
-            <li className="rounded-lg border border-dashed border-zinc-700 bg-zinc-900/50 p-8 text-center text-zinc-500">
+            <li className="rounded-lg border border-dashed border-border bg-card/50 p-8 text-center text-muted">
               {audios.length === 0
                 ? "No audios in this room. Use Add sound to add one."
                 : "No audios match your search."}
@@ -532,7 +536,7 @@ export default function RoomPage() {
               <div
                 draggable
                 onDragStart={(e) => handleDragStart(e, audio.id)}
-                className="flex cursor-grab active:cursor-grabbing touch-none flex-col justify-center rounded-l-lg border border-zinc-700/50 border-r-0 bg-zinc-900/60 px-2 text-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-300"
+                className="flex cursor-grab active:cursor-grabbing touch-none flex-col justify-center rounded-l-lg border border-border/50 border-r-0 bg-card/60 px-2 text-muted hover:bg-card/60 hover:text-foreground"
                 title="Drag to reorder"
                 aria-label="Drag to reorder"
               >
@@ -560,7 +564,7 @@ export default function RoomPage() {
 
         {inactiveAudios.length > 0 && (
           <section className="mt-8">
-            <h2 className="mb-3 text-sm font-medium text-zinc-400">
+            <h2 className="mb-3 text-sm font-medium text-muted">
               Disabled audio
             </h2>
             <ul className="space-y-3">

@@ -1,6 +1,7 @@
 "use client";
 
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthGuard } from "./AuthGuard";
 import { AudioBar } from "./AudioBar";
 import { GlobalAuthLoading } from "./GlobalAuthLoading";
@@ -18,8 +19,10 @@ function AuthShell({ children }: { children: React.ReactNode }) {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <AuthShell>{children}</AuthShell>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AuthShell>{children}</AuthShell>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

@@ -53,21 +53,21 @@ export default function AuthCallbackPage() {
 
   if (status === "error") {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950 px-4">
-        <p className="text-center text-zinc-400">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
+        <p className="text-center text-muted">
           Falha ao concluir o login. Redirecionando...
         </p>
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950 px-4">
-      <p className="text-center text-zinc-400">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
+      <p className="text-center text-muted">
         Concluindo login com Google...
       </p>
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
     </div>
   );
 }

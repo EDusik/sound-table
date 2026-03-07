@@ -7,6 +7,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getRooms, reorderRooms, updateRoom, deleteRoom } from "@/lib/storage";
 import type { Room, Label } from "@/lib/types";
 import { RoomCard } from "@/components/RoomCard";
+import { SoundTableLogo } from "@/components/SoundTableLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import {
+  validateRoomForm,
+  TITLE_MAX,
+  DESCRIPTION_MAX,
+  LABEL_TEXT_MAX,
+  LABELS_MAX,
+} from "@/lib/roomSchema";
 
 const DEFAULT_COLORS = [
   "#f43f5e",
@@ -38,6 +47,9 @@ export default function DashboardPage() {
   const [newLabelColor, setNewLabelColor] = useState(DEFAULT_COLORS[0]);
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [editFieldErrors, setEditFieldErrors] = useState<
+    Record<string, string>
+  >({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingRoom, setDeletingRoom] = useState(false);
 
@@ -67,6 +79,7 @@ export default function DashboardPage() {
       setNewLabelText("");
       setNewLabelColor(DEFAULT_COLORS[0]);
       setEditError(null);
+      setEditFieldErrors({});
     }
   }, [editingRoom]);
 
@@ -86,6 +99,7 @@ export default function DashboardPage() {
   const closeEditModal = () => {
     setEditingRoom(null);
     setEditError(null);
+    setEditFieldErrors({});
     setShowDeleteConfirm(false);
   };
 
@@ -106,8 +120,9 @@ export default function DashboardPage() {
   };
 
   const addEditLabel = () => {
-    const t = newLabelText.trim();
+    const t = newLabelText.trim().slice(0, LABEL_TEXT_MAX);
     if (!t) return;
+    if (editLabels.length >= LABELS_MAX) return;
     setEditLabels((prev) => [
       ...prev,
       { id: generateId(), text: t, color: newLabelColor },
@@ -124,13 +139,25 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!editingRoom) return;
     setEditError(null);
+    setEditFieldErrors({});
+
+    const validation = validateRoomForm({
+      title: editTitle,
+      subtitle: editSubtitle,
+      labels: editLabels,
+    });
+    if (!validation.success) {
+      setEditFieldErrors(validation.errors);
+      return;
+    }
+
     setSaving(true);
     try {
       const updated: Room = {
         ...editingRoom,
-        title: editTitle.trim(),
-        subtitle: editSubtitle.trim(),
-        labels: editLabels,
+        title: validation.data.title,
+        subtitle: validation.data.subtitle,
+        labels: validation.data.labels,
       };
       await updateRoom(updated);
       setRooms((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
@@ -141,7 +168,7 @@ export default function DashboardPage() {
           ? err.message
           : err && typeof err === "object" && "message" in err
             ? String((err as { message: string }).message)
-            : "Failed to save";
+            : "Falha ao salvar.";
       setEditError(message);
     } finally {
       setSaving(false);
@@ -190,7 +217,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="bg-zinc-950">
+    <div className="bg-background">
       {editingRoom && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
@@ -199,21 +226,18 @@ export default function DashboardPage() {
           aria-labelledby="edit-room-title"
         >
           <div
-            className="w-full max-w-lg rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl"
+            className="w-full max-w-lg rounded-xl border border-border bg-card shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <form onSubmit={handleSaveEdit}>
-              <div className="relative flex items-center justify-between border-b border-zinc-700 px-5 py-4">
-                <h2
-                  id="edit-room-title"
-                  className="text-lg font-semibold text-white"
-                >
+              <div className="relative flex items-center justify-between border-b border-border px-5 py-4">
+                <h2 id="edit-room-title" className="text-lg font-semibold">
                   Edit room
                 </h2>
                 <button
                   type="button"
                   onClick={closeEditModal}
-                  className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="rounded-lg p-1.5 text-muted hover:bg-border hover:text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                   aria-label="Close"
                 >
                   <svg
@@ -232,43 +256,71 @@ export default function DashboardPage() {
                   </svg>
                 </button>
               </div>
-              <div className="space-y-4 px-5 py-4">
+              <div className="space-y-4 px-5 py-4 text-white">
                 <div>
                   <label
                     htmlFor="edit-title"
-                    className="block text-sm font-medium text-zinc-300"
+                    className="block text-sm font-medium !text-white"
                   >
                     Title
                   </label>
-                  <input
-                    id="edit-title"
-                    type="text"
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    required
-                    className="mt-1.5 h-10 w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 text-sm text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                    placeholder="Room title"
-                  />
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <input
+                      id="edit-title"
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) =>
+                        setEditTitle(e.target.value.slice(0, TITLE_MAX))
+                      }
+                      maxLength={TITLE_MAX}
+                      required
+                      className="h-10 flex-1 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                      placeholder="Room title"
+                    />
+                    <span className="text-xs text-muted tabular-nums shrink-0">
+                      {editTitle.length}/{TITLE_MAX}
+                    </span>
+                  </div>
+                  {editFieldErrors.title && (
+                    <p className="mt-1 text-xs text-red-400" role="alert">
+                      {editFieldErrors.title}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="edit-subtitle"
-                    className="block text-sm font-medium text-zinc-300"
+                    className="block text-sm font-medium !text-white"
                   >
                     Subtitle
                   </label>
-                  <input
-                    id="edit-subtitle"
-                    type="text"
-                    value={editSubtitle}
-                    onChange={(e) => setEditSubtitle(e.target.value)}
-                    className="mt-1.5 h-10 w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 text-sm text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                    placeholder="Optional subtitle"
-                  />
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <input
+                      id="edit-subtitle"
+                      type="text"
+                      value={editSubtitle}
+                      onChange={(e) =>
+                        setEditSubtitle(
+                          e.target.value.slice(0, DESCRIPTION_MAX),
+                        )
+                      }
+                      maxLength={DESCRIPTION_MAX}
+                      className="h-10 flex-1 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                      placeholder="Optional subtitle"
+                    />
+                    <span className="text-xs text-muted tabular-nums shrink-0">
+                      {editSubtitle.length}/{DESCRIPTION_MAX}
+                    </span>
+                  </div>
+                  {editFieldErrors.subtitle && (
+                    <p className="mt-1 text-xs text-red-400" role="alert">
+                      {editFieldErrors.subtitle}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300">
-                    Labels
+                  <label className="block text-sm font-medium !text-white">
+                    Labels ({editLabels.length}/{LABELS_MAX})
                   </label>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {editLabels.map((l) => (
@@ -293,21 +345,27 @@ export default function DashboardPage() {
                     <input
                       type="text"
                       value={newLabelText}
-                      onChange={(e) => setNewLabelText(e.target.value)}
+                      onChange={(e) =>
+                        setNewLabelText(e.target.value.slice(0, LABEL_TEXT_MAX))
+                      }
+                      maxLength={LABEL_TEXT_MAX}
                       onKeyDown={(e) =>
                         e.key === "Enter" &&
                         (e.preventDefault(), addEditLabel())
                       }
-                      className="h-9 min-w-[140px] flex-1 rounded-lg border border-zinc-600 bg-zinc-800 px-3 text-sm text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none"
+                      className="h-9 min-w-[140px] flex-1 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none"
                       placeholder="Label text"
                     />
+                    <span className="text-xs text-muted tabular-nums shrink-0">
+                      {newLabelText.length}/{LABEL_TEXT_MAX}
+                    </span>
                     <div className="flex gap-1.5">
                       {DEFAULT_COLORS.map((color) => (
                         <button
                           key={color}
                           type="button"
                           onClick={() => setNewLabelColor(color)}
-                          className="h-9 w-9 shrink-0 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+                          className="h-9 w-9 shrink-0 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-card"
                           style={{
                             backgroundColor: color,
                             borderColor:
@@ -320,11 +378,23 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={addEditLabel}
-                      className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-600"
+                      disabled={editLabels.length >= LABELS_MAX}
+                      className="rounded-lg bg-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-border/80 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Add label
                     </button>
                   </div>
+                  {(editFieldErrors.labels ??
+                    Object.keys(editFieldErrors).some((k) =>
+                      k.startsWith("labels."),
+                    )) && (
+                    <p className="mt-1 text-xs text-red-400" role="alert">
+                      {editFieldErrors.labels ??
+                        Object.entries(editFieldErrors)
+                          .filter(([k]) => k.startsWith("labels."))
+                          .map(([, v]) => v)[0]}
+                    </p>
+                  )}
                 </div>
                 {editError && (
                   <div className="rounded-lg bg-red-500/20 p-3 text-sm text-red-200">
@@ -332,7 +402,7 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-between border-t border-zinc-700 px-5 py-4">
+              <div className="flex items-center justify-between border-t border-border px-5 py-4">
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
@@ -344,14 +414,14 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={closeEditModal}
-                    className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
+                    className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-card"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-amber-400 disabled:opacity-50"
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background hover:bg-accent-hover disabled:opacity-50"
                   >
                     {saving ? "Saving…" : "Save"}
                   </button>
@@ -371,18 +441,18 @@ export default function DashboardPage() {
           onClick={() => !deletingRoom && setShowDeleteConfirm(false)}
         >
           <div
-            className="w-full max-w-sm rounded-xl border border-zinc-700 bg-zinc-900 p-5 shadow-xl"
+            className="w-full max-w-sm rounded-xl border border-border bg-card p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2
               id="delete-room-modal-title"
-              className="text-lg font-semibold text-white"
+              className="text-lg font-semibold text-foreground"
             >
               Delete room
             </h2>
-            <p className="mt-2 text-sm text-zinc-400">
+            <p className="mt-2 text-sm text-muted">
               Are you sure you want to delete this room{" "}
-              <strong className="text-white">
+              <strong className="text-foreground">
                 &quot;{editingRoom.title}&quot;
               </strong>
               ? All audio will be removed and this action cannot be undone.
@@ -392,7 +462,7 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => !deletingRoom && setShowDeleteConfirm(false)}
                 disabled={deletingRoom}
-                className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
+                className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-card disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -400,7 +470,7 @@ export default function DashboardPage() {
                 type="button"
                 onClick={handleDeleteRoom}
                 disabled={deletingRoom}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-foreground hover:bg-red-500 disabled:opacity-50"
               >
                 {deletingRoom ? "Deleting…" : "Delete"}
               </button>
@@ -409,52 +479,59 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <header className="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
-          <h1 className="text-xl font-semibold text-white">🎲 SoundTable</h1>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/create-room"
-              className="rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-medium text-zinc-900 transition hover:bg-amber-400"
-            >
-              New Room
-            </Link>
-            <button
-              type="button"
-              onClick={() => signOut()}
-              className="rounded-lg border border-zinc-600 px-3 py-2.5 text-sm text-zinc-300 transition hover:bg-zinc-800"
-            >
-              Sign out
-            </button>
+      <header className="sticky top-0 z-10 w-full border-b border-border bg-background backdrop-blur">
+        <div className="flex w-full items-center">
+          <div className="mx-auto flex max-w-6xl flex-1 items-center justify-between px-4 py-4">
+            <h1 className="text-xl font-semibold text-foreground">
+              <SoundTableLogo />
+            </h1>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/create-room"
+                className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-background transition hover:bg-accent-hover"
+              >
+                New Room
+              </Link>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="rounded-lg border border-border px-3 py-2.5 text-sm text-foreground transition hover:bg-card"
+              >
+                Sign out
+              </button>
 
-            {user ? (
-              <span className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800/80 px-3 py-1.5 text-sm text-zinc-200">
-                {user.photoURL ? (
-                  <Image
-                    src={user.photoURL}
-                    alt=""
-                    width={28}
-                    height={28}
-                    className="h-7 w-7 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500/30 text-xs font-medium text-amber-200">
-                    {(user.displayName ?? user.email ?? "?")[0].toUpperCase()}
+              {user ? (
+                <span className="flex items-center gap-2 rounded-lg border border-border bg-card/80 px-3 py-1.5 text-sm text-foreground">
+                  {user.photoURL ? (
+                    <Image
+                      src={user.photoURL}
+                      alt=""
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-soft/50 text-xs font-medium text-accent">
+                      {(user.displayName ?? user.email ?? "?")[0].toUpperCase()}
+                    </span>
+                  )}
+                  <span className="max-w-[140px] truncate">
+                    {user.displayName ?? user.email ?? "User"}
                   </span>
-                )}
-                <span className="max-w-[140px] truncate">
-                  {user.displayName ?? user.email ?? "User"}
                 </span>
-              </span>
-            ) : null}
+              ) : null}
+            </div>
+          </div>
+          <div className="shrink-0 px-4 py-4">
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-8 pb-24">
+      <main className="mx-auto max-w-6xl px-4 py-8 pb-24 bg-background">
         {loading && (
           <div className="flex justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
           </div>
         )}
         {error && (
@@ -463,11 +540,11 @@ export default function DashboardPage() {
           </div>
         )}
         {!loading && !error && rooms.length === 0 && (
-          <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/50 p-12 text-center">
-            <p className="text-zinc-400">No rooms yet.</p>
+          <div className="rounded-xl border border-dashed border-border bg-card/50 p-12 text-center">
+            <p className="text-muted">No rooms yet.</p>
             <Link
               href="/create-room"
-              className="mt-4 inline-block rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-amber-400"
+              className="mt-4 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background hover:bg-accent-hover"
             >
               Create your first room
             </Link>
@@ -488,7 +565,7 @@ export default function DashboardPage() {
                 <div
                   draggable
                   onDragStart={(e) => handleDragStart(e, room.id)}
-                  className="flex cursor-grab active:cursor-grabbing touch-none flex-col justify-center rounded-l-xl border border-zinc-700/50 border-r-0 bg-zinc-800/50 py-2 pl-2 pr-1 text-zinc-500 hover:bg-zinc-700/50 hover:text-zinc-400"
+                  className="flex self-stretch cursor-grab active:cursor-grabbing touch-none flex-col justify-center rounded-l-xl border border-border/50 border-r-0 bg-card/50 py-2 pl-2 pr-1 text-muted hover:bg-border/50 hover:text-muted"
                   title="Drag to reorder"
                   aria-label="Drag to reorder"
                 >

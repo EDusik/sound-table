@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Footer } from "@/components/Footer";
@@ -25,12 +26,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-dvh flex-col antialiased`}
       >
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          src="/theme-init.js"
+        />
         <Providers>
-          <main className="min-h-0 flex-1 overflow-auto">{children}</main>
+          <main className="min-h-0 flex-1 overflow-auto bg-background">
+            {children}
+          </main>
           <Footer />
         </Providers>
       </body>

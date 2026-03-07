@@ -87,11 +87,11 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
 
   if (!configured) {
     return (
-      <details className="group rounded-lg border border-zinc-700 bg-zinc-800/50">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800/80 [&::-webkit-details-marker]:hidden">
+      <details className="group rounded-lg border border-border bg-card/50">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground hover:bg-card/80 [&::-webkit-details-marker]:hidden">
           <span>Search Freesound</span>
           <svg
-            className="h-5 w-5 shrink-0 text-zinc-500 transition-transform group-open:rotate-180"
+            className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -105,10 +105,10 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
             />
           </svg>
         </summary>
-        <div className="border-t border-zinc-700 p-4">
-          <p className="text-sm text-zinc-400">
+        <div className="border-t border-border p-4">
+          <p className="text-sm text-muted">
             Add{" "}
-            <code className="rounded bg-zinc-700 px-1">
+            <code className="rounded bg-border px-1">
               NEXT_PUBLIC_FREESOUND_API_KEY
             </code>{" "}
             to search and add sounds from{" "}
@@ -116,7 +116,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
               href="https://freesound.org"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-400 hover:underline"
+              className="text-accent hover:underline"
             >
               Freesound
             </a>
@@ -125,7 +125,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
               href="https://freesound.org/apiv2/apply"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-400 hover:underline"
+              className="text-accent hover:underline"
             >
               freesound.org/apiv2/apply
             </a>
@@ -137,16 +137,16 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
   }
 
   return (
-    <details className="group rounded-lg border border-zinc-700 bg-zinc-800/50">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800/80 [&::-webkit-details-marker]:hidden">
+    <details className="group rounded-lg border border-border bg-card/50">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground hover:bg-card/80 [&::-webkit-details-marker]:hidden">
         <span>Search Freesound</span>
         {results.length > 0 && (
-          <span className="text-xs font-normal text-zinc-500">
+          <span className="text-xs font-normal text-muted">
             {results.length} result{results.length !== 1 ? "s" : ""}
           </span>
         )}
         <svg
-          className="h-5 w-5 shrink-0 text-zinc-500 transition-transform group-open:rotate-180"
+          className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -160,7 +160,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
           />
         </svg>
       </summary>
-      <div className="border-t border-zinc-700 p-4">
+      <div className="border-t border-border p-4">
         <form onSubmit={handleSearch} className="mb-3 flex gap-2">
           <input
             type="search"
@@ -174,13 +174,13 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
               }
             }}
             placeholder="e.g. rain, piano, alarm…"
-            className="flex-1 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none"
+            className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-foreground placeholder-muted focus:border-accent focus:outline-none"
             aria-label="Search Freesound"
           />
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-zinc-900 disabled:opacity-50"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
           >
             {loading ? "Searching…" : "Search"}
           </button>
@@ -195,14 +195,14 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
               return (
                 <li
                   key={sound.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded border border-zinc-600/50 bg-zinc-900/50 p-3"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded border border-border/50 bg-card/50 p-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-white">
+                    <p className="truncate font-medium text-foreground">
                       {sound.name}
                     </p>
                     {sound.duration != null && (
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted">
                         {Math.round(sound.duration)}s
                       </p>
                     )}
@@ -212,7 +212,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
                       type="button"
                       onClick={() => handlePlay(sound)}
                       disabled={!previewUrl}
-                      className="rounded bg-zinc-600 p-2 text-white hover:bg-zinc-500 disabled:opacity-50"
+                      className="rounded bg-border p-2 text-foreground hover:bg-border/80 disabled:opacity-50"
                       title={isPlaying ? "Stop" : "Play preview"}
                     >
                       {isPlaying ? (
@@ -237,7 +237,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
                       type="button"
                       onClick={() => handleAdd(sound)}
                       disabled={!previewUrl || isAdding}
-                      className="rounded bg-amber-500 px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-amber-400 disabled:opacity-50"
+                      className="rounded bg-accent px-3 py-2 text-sm font-medium text-background hover:bg-accent-hover disabled:opacity-50"
                     >
                       {isAdding ? "Adding…" : "Add to room"}
                     </button>

@@ -67,12 +67,12 @@ export default function LoginVerifyPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-xl">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card/80 p-8 shadow-xl">
         <div className="mb-4 flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/20">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft/30">
             <svg
-              className="h-6 w-6 text-amber-400"
+              className="h-6 w-6 text-accent"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -86,10 +86,10 @@ export default function LoginVerifyPage() {
             </svg>
           </div>
         </div>
-        <h1 className="text-center text-xl font-semibold text-white">
+        <h1 className="text-center text-xl font-semibold text-foreground">
           Two-factor verification
         </h1>
-        <p className="mt-2 text-center text-sm text-zinc-400">
+        <p className="mt-2 text-center text-sm text-muted">
           Enter the 6-digit code from the Google Authenticator app (or another
           compatible app).
         </p>
@@ -108,7 +108,7 @@ export default function LoginVerifyPage() {
               placeholder="000000"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              className="w-full rounded-xl border border-zinc-600 bg-zinc-800 px-4 py-3 text-center text-lg tracking-[0.5em] text-white placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-center text-lg tracking-[0.5em] text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               disabled={loading}
             />
           </div>
@@ -120,23 +120,23 @@ export default function LoginVerifyPage() {
           <button
             type="submit"
             disabled={loading || code.length < 6}
-            className="w-full rounded-xl bg-amber-500 px-4 py-3 font-medium text-zinc-900 transition hover:bg-amber-400 disabled:opacity-50 disabled:hover:bg-amber-500"
+            className="w-full rounded-xl bg-accent px-4 py-3 font-medium text-background transition hover:bg-accent-hover disabled:opacity-50 disabled:hover:bg-accent"
           >
             {loading ? "Verifying…" : "Continue"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-zinc-500">
+        <p className="mt-6 text-center text-xs text-muted">
           Haven't set it up yet?{" "}
           <Link
             href="/login/enroll"
-            className="text-amber-400 underline hover:text-amber-300"
+            className="text-accent underline hover:text-accent-hover"
           >
             Set up Google Authenticator
           </Link>
         </p>
-        <p className="mt-2 text-center text-xs text-zinc-500">
-          <Link href="/login" className="underline hover:text-zinc-400">
+        <p className="mt-2 text-center text-xs text-muted">
+          <Link href="/login" className="underline hover:text-muted">
             Back to login
           </Link>
         </p>

@@ -75,31 +75,31 @@ export default function LoginEnrollPage() {
 
   if (enrollLoading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950 px-4">
-        <p className="text-zinc-400">Preparing Google Authenticator...</p>
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
+        <p className="text-muted">Preparing Google Authenticator...</p>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
       </div>
     );
   }
 
   if (enrolled) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950 px-4">
-        <p className="text-center text-zinc-400">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
+        <p className="text-center text-muted">
           Authenticator set up. Redirecting...
         </p>
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-xl">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card/80 p-8 shadow-xl">
         <div className="mb-4 flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/20">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft/30">
             <svg
-              className="h-6 w-6 text-amber-400"
+              className="h-6 w-6 text-accent"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -113,10 +113,10 @@ export default function LoginEnrollPage() {
             </svg>
           </div>
         </div>
-        <h1 className="text-center text-xl font-semibold text-white">
+        <h1 className="text-center text-xl font-semibold text-foreground">
           Set up Google Authenticator
         </h1>
-        <p className="mt-2 text-center text-sm text-zinc-400">
+        <p className="mt-2 text-center text-sm text-muted">
           Scan the QR code with the Google Authenticator app (or Authy, etc.) or
           enter the code manually.
         </p>
@@ -129,11 +129,11 @@ export default function LoginEnrollPage() {
 
         {qrSvg && (
           <div className="mt-6 flex flex-col items-center">
-            <div className="rounded-lg border border-zinc-700 bg-white p-2 [&_svg]:h-48 [&_svg]:w-48">
+            <div className="rounded-lg border border-border bg-card p-2 [&_svg]:h-48 [&_svg]:w-48">
               <div dangerouslySetInnerHTML={{ __html: qrSvg }} />
             </div>
             {secret && (
-              <p className="mt-3 break-all text-center font-mono text-xs text-zinc-500">
+              <p className="mt-3 break-all text-center font-mono text-xs text-muted">
                 Or enter: {secret}
               </p>
             )}
@@ -155,21 +155,21 @@ export default function LoginEnrollPage() {
               onChange={(e) =>
                 setVerifyCode(e.target.value.replace(/\D/g, "").slice(0, 6))
               }
-              className="w-full rounded-xl border border-zinc-600 bg-zinc-800 px-4 py-3 text-center text-lg tracking-[0.5em] text-white placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-center text-lg tracking-[0.5em] text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               disabled={loading || !factorId}
             />
           </div>
           <button
             type="submit"
             disabled={loading || verifyCode.length < 6}
-            className="w-full rounded-xl bg-amber-500 px-4 py-3 font-medium text-zinc-900 transition hover:bg-amber-400 disabled:opacity-50 disabled:hover:bg-amber-500"
+            className="w-full rounded-xl bg-accent px-4 py-3 font-medium text-background transition hover:bg-accent-hover disabled:opacity-50 disabled:hover:bg-accent"
           >
             {loading ? "Verifying…" : "Enable authenticator"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-zinc-500">
-          <Link href="/dashboard" className="underline hover:text-zinc-400">
+        <p className="mt-6 text-center text-xs text-muted">
+          <Link href="/dashboard" className="underline hover:text-muted">
             Back to dashboard
           </Link>
         </p>

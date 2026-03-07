@@ -7,6 +7,14 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { createRoom } from "@/lib/storage";
 import type { Label } from "@/lib/types";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import {
+  validateRoomForm,
+  TITLE_MAX,
+  DESCRIPTION_MAX,
+  LABEL_TEXT_MAX,
+  LABELS_MAX,
+} from "@/lib/roomSchema";
 
 const DEFAULT_COLORS = [
   "#f43f5e", // rose
@@ -33,10 +41,12 @@ export default function CreateRoomPage() {
   const [newLabelColor, setNewLabelColor] = useState(DEFAULT_COLORS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const addLabel = () => {
-    const t = newLabelText.trim();
+    const t = newLabelText.trim().slice(0, LABEL_TEXT_MAX);
     if (!t) return;
+    if (labels.length >= LABELS_MAX) return;
     setLabels((prev) => [
       ...prev,
       { id: generateId(), text: t, color: newLabelColor },
@@ -53,9 +63,25 @@ export default function CreateRoomPage() {
     e.preventDefault();
     if (!user?.uid) return;
     setError(null);
+    setFieldErrors({});
+
+    const validation = validateRoomForm({
+      title,
+      subtitle,
+      labels,
+    });
+    if (!validation.success) {
+      setFieldErrors(validation.errors);
+      return;
+    }
+
     setLoading(true);
     try {
-      const room = await createRoom(user.uid, { title, subtitle, labels });
+      const room = await createRoom(user.uid, {
+        title: validation.data.title,
+        subtitle: validation.data.subtitle,
+        labels: validation.data.labels,
+      });
       router.push(`/room/${room.id}`);
     } catch (err) {
       const message =
@@ -63,7 +89,7 @@ export default function CreateRoomPage() {
           ? err.message
           : err && typeof err === "object" && "message" in err
             ? String((err as { message: string }).message)
-            : "Failed to create room";
+            : "Falha ao criar a sala.";
       setError(message);
     } finally {
       setLoading(false);
@@ -71,102 +97,152 @@ export default function CreateRoomPage() {
   };
 
   return (
-    <div className="bg-zinc-950">
-      <header className="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur">
-        <div className="mx-auto max-w-4xl px-4 py-3">
-          <div className="flex items-center justify-between">
-            <Link href="/dashboard" className="text-zinc-400 hover:text-white">
+    <div className="bg-background">
+      <header className="sticky top-0 z-10 w-full border-b border-border bg-background backdrop-blur">
+        <div className="flex w-full items-center">
+          <div className="mx-auto flex max-w-6xl flex-1 items-center justify-between px-4 py-3">
+            <Link
+              href="/dashboard"
+              className="text-muted hover:text-foreground"
+            >
               ← Dashboard
             </Link>
-            <h1 className="text-xl font-semibold text-white">New Room</h1>
-            {user ? (
-              <span className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1 text-sm text-zinc-200">
-                {user.photoURL ? (
-                  <Image
-                    src={user.photoURL}
-                    alt=""
-                    width={24}
-                    height={24}
-                    className="h-6 w-6 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/30 text-xs font-medium text-amber-200">
-                    {(user.displayName ?? user.email ?? "?")[0].toUpperCase()}
+            <h1 className="text-xl font-semibold text-foreground">New Room</h1>
+            <div className="flex items-center gap-2">
+              {user ? (
+                <span className="flex items-center gap-2 rounded-lg border border-border bg-card/80 px-2.5 py-1 text-sm text-foreground">
+                  {user.photoURL ? (
+                    <Image
+                      src={user.photoURL}
+                      alt=""
+                      width={24}
+                      height={24}
+                      className="h-6 w-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft/50 text-xs font-medium text-accent">
+                      {(user.displayName ?? user.email ?? "?")[0].toUpperCase()}
+                    </span>
+                  )}
+                  <span className="max-w-[120px] truncate">
+                    {user.displayName ?? user.email ?? "User"}
                   </span>
-                )}
-                <span className="max-w-[120px] truncate">
-                  {user.displayName ?? user.email ?? "User"}
                 </span>
-              </span>
-            ) : (
-              <span className="w-20" />
-            )}
+              ) : (
+                <span className="w-20" />
+              )}
+            </div>
+          </div>
+          <div className="shrink-0 px-4 py-3">
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-4xl px-4 flex-1">
+      <div className="mx-auto max-w-6xl px-4 flex-1">
         <form
           onSubmit={handleSubmit}
-          className="border-b border-zinc-800 bg-zinc-950/90"
+          className="border-b border-border bg-background/90"
         >
-          <div className="mx-auto max-w-4xl px-4 mt-4">
+          <div className="mx-auto max-w-6xl px-4 mt-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-zinc-400 whitespace-nowrap">
+              <span className="text-xs font-medium text-muted whitespace-nowrap">
                 Title
               </span>
-              <input
-                id="title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                className="h-9 w-40 rounded-lg border border-zinc-600 bg-zinc-800 px-3 text-sm text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                placeholder="Room title"
-              />
+              <div className="flex items-center gap-1">
+                <input
+                  id="title"
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX))}
+                  maxLength={TITLE_MAX}
+                  required
+                  className="h-9 w-40 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  placeholder="Room title"
+                />
+                <span className="text-xs text-muted tabular-nums">
+                  {title.length}/{TITLE_MAX}
+                </span>
+              </div>
+              {fieldErrors.title && (
+                <p className="text-xs text-red-400" role="alert">
+                  {fieldErrors.title}
+                </p>
+              )}
 
-              <span className="text-xs font-medium text-zinc-400 whitespace-nowrap">
+              <span className="text-xs font-medium text-muted whitespace-nowrap">
                 Subtitle
               </span>
-              <input
-                id="subtitle"
-                type="text"
-                value={subtitle}
-                onChange={(e) => setSubtitle(e.target.value)}
-                className="h-9 w-40 rounded-lg border border-zinc-600 bg-zinc-800 px-3 text-sm text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                placeholder="Optional subtitle"
-              />
+              <div className="flex items-center gap-1">
+                <input
+                  id="subtitle"
+                  type="text"
+                  value={subtitle}
+                  onChange={(e) =>
+                    setSubtitle(e.target.value.slice(0, DESCRIPTION_MAX))
+                  }
+                  maxLength={DESCRIPTION_MAX}
+                  className="h-9 w-40 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  placeholder="Optional subtitle"
+                />
+                <span className="text-xs text-muted tabular-nums">
+                  {subtitle.length}/{DESCRIPTION_MAX}
+                </span>
+              </div>
+              {fieldErrors.subtitle && (
+                <p className="text-xs text-red-400" role="alert">
+                  {fieldErrors.subtitle}
+                </p>
+              )}
 
               <div className="flex flex-1 min-w-[260px] items-center gap-2">
-                <span className="text-xs font-medium text-zinc-400 whitespace-nowrap">
-                  Labels
+                <span className="text-xs font-medium text-muted whitespace-nowrap">
+                  Labels ({labels.length}/{LABELS_MAX})
                 </span>
                 <input
                   type="text"
                   value={newLabelText}
-                  onChange={(e) => setNewLabelText(e.target.value)}
+                  onChange={(e) =>
+                    setNewLabelText(e.target.value.slice(0, LABEL_TEXT_MAX))
+                  }
+                  maxLength={LABEL_TEXT_MAX}
                   onKeyDown={(e) =>
                     e.key === "Enter" && (e.preventDefault(), addLabel())
                   }
-                  className="h-9 w-full min-w-[140px] rounded-lg border border-zinc-600 bg-zinc-800 px-3 text-sm text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none"
+                  className="h-9 w-full min-w-[140px] rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none"
                   placeholder="Label text"
                 />
+                <span className="text-xs text-muted tabular-nums shrink-0">
+                  {newLabelText.length}/{LABEL_TEXT_MAX}
+                </span>
                 <button
                   type="button"
                   onClick={addLabel}
-                  className="shrink-0 rounded-lg bg-zinc-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-600"
+                  disabled={labels.length >= LABELS_MAX}
+                  className="shrink-0 rounded-lg bg-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-border/80 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add
                 </button>
               </div>
+              {(fieldErrors.labels ??
+                Object.keys(fieldErrors).some((k) =>
+                  k.startsWith("labels."),
+                )) && (
+                <p className="text-xs text-red-400" role="alert">
+                  {fieldErrors.labels ??
+                    Object.entries(fieldErrors)
+                      .filter(([k]) => k.startsWith("labels."))
+                      .map(([, v]) => v)[0]}
+                </p>
+              )}
             </div>
           </div>
 
-          <div className="mx-auto max-w-4xl px-4 py-2 space-y-4">
+          <div className="mx-auto max-w-6xl px-4 py-2 space-y-4">
             <div className="flex flex-wrap gap-4 md:items-end">
               <div className="flex-1 min-w-[260px]">
-                <label className="block text-sm font-medium text-zinc-300">
-                  Existing labels
+                <label className="block text-sm font-medium text-foreground">
+                  Existing labels ({labels.length}/{LABELS_MAX})
                 </label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {labels.map((l) => (
@@ -194,7 +270,7 @@ export default function CreateRoomPage() {
                         key={color}
                         type="button"
                         onClick={() => setNewLabelColor(color)}
-                        className="h-9 w-9 shrink-0 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950"
+                        className="h-9 w-9 shrink-0 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
                         style={{
                           backgroundColor: color,
                           borderColor:
@@ -211,7 +287,8 @@ export default function CreateRoomPage() {
                   <button
                     type="button"
                     onClick={addLabel}
-                    className="rounded-lg bg-zinc-700 px-4 py-2 text-sm text-white hover:bg-zinc-600"
+                    disabled={labels.length >= LABELS_MAX}
+                    className="rounded-lg bg-border px-4 py-2 text-sm text-foreground hover:bg-border/80 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Add
                   </button>
@@ -228,13 +305,13 @@ export default function CreateRoomPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 rounded-lg bg-amber-500 py-2 px-4 font-medium text-zinc-900 transition hover:bg-amber-400 disabled:opacity-50"
+                    className="flex-1 rounded-lg bg-accent py-2 px-4 font-medium text-background transition hover:bg-accent-hover disabled:opacity-50"
                   >
                     {loading ? "Creating…" : "Create Room"}
                   </button>
                   <Link
                     href="/dashboard"
-                    className="rounded-lg border border-zinc-600 py-2.5 px-4 text-center text-zinc-300 hover:bg-zinc-800"
+                    className="rounded-lg border border-border py-2.5 px-4 text-center text-foreground hover:bg-card"
                   >
                     Cancel
                   </Link>

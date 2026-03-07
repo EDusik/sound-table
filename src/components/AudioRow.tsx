@@ -191,7 +191,7 @@ function YouTubeAudioRow({
 
   return (
     <div
-      className={`flex flex-col gap-2 rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-4 sm:flex-row sm:items-start sm:gap-4 ${
+      className={`flex flex-col gap-2 rounded-lg border border-border/50 bg-card/50 p-4 sm:flex-row sm:items-start sm:gap-4 ${
         isInactive ? "opacity-40" : ""
       }`}
     >
@@ -201,17 +201,17 @@ function YouTubeAudioRow({
             type="checkbox"
             checked={!isInactive}
             onChange={() => onToggleActive?.(audio)}
-            className="h-4 w-4 cursor-pointer accent-amber-500"
+            className="h-4 w-4 cursor-pointer accent-accent"
             aria-label={isInactive ? "Re-enable audio" : "Disable audio"}
           />
         </label>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-white">{audio.name}</p>
+          <p className="truncate font-medium text-foreground">{audio.name}</p>
           <a
             href={watchUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="truncate text-xs text-amber-400 hover:underline"
+            className="truncate text-xs text-accent hover:underline"
           >
             {watchUrl}
           </a>
@@ -222,7 +222,7 @@ function YouTubeAudioRow({
           <button
             type="button"
             onClick={handlePlay}
-            className="rounded-lg bg-amber-500 p-2 text-zinc-900 hover:bg-amber-400"
+            className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
             title="Play"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@ function YouTubeAudioRow({
           <button
             type="button"
             onClick={handlePause}
-            className="rounded-lg bg-amber-500 p-2 text-zinc-900 hover:bg-amber-400"
+            className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
             title="Pause"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -244,14 +244,14 @@ function YouTubeAudioRow({
         <button
           type="button"
           onClick={handleStop}
-          className="rounded-lg bg-zinc-600 p-2 text-white hover:bg-zinc-500"
+          className="rounded-lg bg-border p-2 text-foreground hover:bg-border/80"
           title="Stop"
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
             <rect x="6" y="6" width="12" height="12" />
           </svg>
         </button>
-        <label className="flex items-center gap-1 text-xs text-zinc-400">
+        <label className="flex items-center gap-1 text-xs text-muted">
           <span>Vol</span>
           <input
             type="range"
@@ -269,8 +269,8 @@ function YouTubeAudioRow({
           title={loop ? "Loop on" : "Loop off"}
           className={`rounded p-1.5 text-xs ${
             loop
-              ? "bg-amber-500/30 text-amber-300"
-              : "text-zinc-500 hover:bg-zinc-700"
+              ? "bg-accent-soft/50 text-accent"
+              : "text-muted hover:bg-border"
           }`}
         >
           Loop
@@ -384,7 +384,7 @@ function HtmlAudioRow({
 
   return (
     <div
-      className={`flex flex-col gap-2 rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-4 sm:flex-row sm:items-center sm:gap-4 ${
+      className={`flex flex-col gap-2 rounded-lg border border-border/50 bg-card/50 p-4 sm:flex-row sm:items-center sm:gap-4 ${
         isInactive ? "opacity-40" : ""
       }`}
     >
@@ -404,13 +404,13 @@ function HtmlAudioRow({
             type="checkbox"
             checked={!isInactive}
             onChange={() => onToggleActive?.(audio)}
-            className="h-4 w-4 cursor-pointer accent-amber-500"
+            className="h-4 w-4 cursor-pointer accent-accent"
             aria-label={isInactive ? "Re-enable audio" : "Disable audio"}
           />
         </label>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-white">{audio.name}</p>
-          <p className="truncate text-xs text-zinc-500">{audio.sourceUrl}</p>
+          <p className="truncate font-medium text-foreground">{audio.name}</p>
+          <p className="truncate text-xs text-muted">{audio.sourceUrl}</p>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -418,7 +418,7 @@ function HtmlAudioRow({
           <button
             type="button"
             onClick={handlePlay}
-            className="rounded-lg bg-amber-500 p-2 text-zinc-900 hover:bg-amber-400"
+            className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
             title="Play"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -429,7 +429,7 @@ function HtmlAudioRow({
           <button
             type="button"
             onClick={handlePause}
-            className="rounded-lg bg-amber-500 p-2 text-zinc-900 hover:bg-amber-400"
+            className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
             title="Pause"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -440,14 +440,14 @@ function HtmlAudioRow({
         <button
           type="button"
           onClick={handleStop}
-          className="rounded-lg bg-zinc-600 p-2 text-white hover:bg-zinc-500"
+          className="rounded-lg bg-border p-2 text-foreground hover:bg-border/80"
           title="Stop"
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
             <rect x="6" y="6" width="12" height="12" />
           </svg>
         </button>
-        <label className="flex items-center gap-1 text-xs text-zinc-400">
+        <label className="flex items-center gap-1 text-xs text-muted">
           <span>Vol</span>
           <input
             type="range"
@@ -463,7 +463,7 @@ function HtmlAudioRow({
           type="button"
           onClick={handleLoop}
           title={player?.loop ? "Loop on" : "Loop off"}
-          className={`rounded p-1.5 text-xs ${player?.loop ? "bg-amber-500/30 text-amber-300" : "text-zinc-500 hover:bg-zinc-700"}`}
+          className={`rounded p-1.5 text-xs ${player?.loop ? "bg-accent-soft/50 text-accent" : "text-muted hover:bg-border"}`}
         >
           Loop
         </button>

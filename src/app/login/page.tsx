@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { SoundTableLogo } from "@/components/SoundTableLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
@@ -39,16 +41,20 @@ export default function LoginPage() {
   if (loading) return null;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-xl">
-        <h1 className="text-center text-2xl font-semibold text-white">
-          🎲 SoundTable
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="flex w-full shrink-0 items-center justify-end border-b border-border bg-background px-4 py-3">
+        <ThemeToggle />
+      </header>
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4">
+        <div className="w-full max-w-sm rounded-2xl border border-border bg-card/80 p-8 shadow-xl">
+        <h1 className="text-center text-2xl font-semibold text-foreground">
+          <SoundTableLogo />
         </h1>
-        <h2 className="text-center text-lg text-zinc-400 mt-2">
+        <h2 className="text-center text-lg text-muted mt-2">
           Create the perfect sound space for every RPG session.
         </h2>
         {!isConfigured && (
-          <p className="mt-4 rounded-lg bg-amber-500/20 p-3 text-sm text-amber-200">
+          <p className="mt-4 rounded-lg bg-accent-soft/30 p-3 text-sm text-accent">
             Configure Supabase (see .env). Using demo mode: data is stored in
             this browser only.
           </p>
@@ -57,7 +63,7 @@ export default function LoginPage() {
           type="button"
           onClick={handleSignIn}
           disabled={!isConfigured}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-zinc-900 transition hover:bg-zinc-200 disabled:opacity-50 disabled:hover:bg-white"
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-foreground transition hover:bg-border disabled:opacity-50 disabled:hover:bg-card"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -84,26 +90,27 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleSignInDemo}
-              className="mt-3 w-full rounded-xl border border-zinc-600 bg-zinc-800 px-4 py-3 text-white transition hover:bg-zinc-700"
+              className="mt-3 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground transition hover:bg-card"
             >
               Continue with local storage (no account)
             </button>
-            <p className="mt-4 text-center text-xs text-zinc-500">
+            <p className="mt-4 text-center text-xs text-muted">
               Add Supabase env vars to enable Google sign-in.
             </p>
           </>
         )}
         {isAuthenticated && (
-          <p className="mt-6 text-center text-sm text-zinc-400">
+          <p className="mt-6 text-center text-sm text-muted">
             Already signed in?{" "}
             <Link
               href="/dashboard"
-              className="text-amber-400 underline hover:text-amber-300"
+              className="text-accent underline hover:text-accent-hover"
             >
               Go to dashboard
             </Link>
           </p>
         )}
+        </div>
       </div>
     </div>
   );
