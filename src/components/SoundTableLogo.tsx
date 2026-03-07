@@ -16,8 +16,8 @@ export function SoundTableLogo({ className }: SoundTableLogoProps) {
         aria-hidden
       >
         🎲
-      </span>{" "}
-      SoundTable
+      </span>
+      <span className="hidden sm:inline"> SoundTable</span>
     </span>
   );
 }

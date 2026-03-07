@@ -71,6 +71,20 @@ For Google login and cloud data:
    npm run dev
    ```
 
+### Deploy / Production (avoid redirect to localhost)
+
+After deploying, if signing in with Google redirects you to `http://localhost:3000/`, adjust in **Supabase**:
+
+1. **Supabase** → **Authentication** → **URL Configuration**.
+2. **Site URL**: change to your app’s production URL, e.g. `https://your-domain.vercel.app` (or the domain you use).
+3. **Redirect URLs**: add the production callback URL, e.g.:
+   ```text
+   https://your-domain.vercel.app/auth/callback
+   ```
+   You can keep `http://localhost:3000/auth/callback` for development as well.
+
+The app already sends `redirectTo` with `window.location.origin`, so in production Supabase must have the production URL allowed under **Redirect URLs** and, if applicable, **Site URL**.
+
 ---
 
 ## ⚙️ Configuration

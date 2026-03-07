@@ -233,7 +233,7 @@ async function setSupabaseRoom(room: Room): Promise<void> {
 
 async function deleteSupabaseRoom(roomId: string): Promise<void> {
   if (!supabase) return;
-  // Apagar áudios da room primeiro (a migration também tem on delete cascade como garantia)
+  // Delete room audios first (the migration also has on delete cascade as a safeguard)
   const { error: audiosError } = await supabase
     .from("audios")
     .delete()

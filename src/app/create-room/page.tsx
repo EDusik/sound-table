@@ -89,7 +89,7 @@ export default function CreateRoomPage() {
           ? err.message
           : err && typeof err === "object" && "message" in err
             ? String((err as { message: string }).message)
-            : "Falha ao criar a sala.";
+            : "Failed to create room.";
       setError(message);
     } finally {
       setLoading(false);
@@ -99,15 +99,14 @@ export default function CreateRoomPage() {
   return (
     <div className="bg-background">
       <header className="sticky top-0 z-10 w-full border-b border-border bg-background backdrop-blur">
-        <div className="flex w-full items-center">
-          <div className="mx-auto flex max-w-6xl flex-1 items-center justify-between px-4 py-3">
+        <div className="flex w-full min-w-0 items-center">
+          <div className="mx-auto flex max-w-6xl min-w-0 flex-1 items-center justify-between gap-2 px-4 py-3">
             <Link
               href="/dashboard"
               className="text-muted hover:text-foreground"
             >
               ← Dashboard
             </Link>
-            <h1 className="text-xl font-semibold text-foreground">New Room</h1>
             <div className="flex items-center gap-2">
               {user ? (
                 <span className="flex items-center gap-2 rounded-lg border border-border bg-card/80 px-2.5 py-1 text-sm text-foreground">
@@ -139,123 +138,137 @@ export default function CreateRoomPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-4 flex-1">
+      <div className="mx-auto max-w-6xl flex-1 min-w-0 overflow-x-hidden px-4">
         <form
           onSubmit={handleSubmit}
-          className="border-b border-border bg-background/90"
+          className="min-w-0 border-b border-border bg-background/90"
         >
-          <div className="mx-auto max-w-6xl px-4 mt-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted whitespace-nowrap">
-                Title
-              </span>
-              <div className="flex items-center gap-1">
-                <input
-                  id="title"
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX))}
-                  maxLength={TITLE_MAX}
-                  required
-                  className="h-9 w-40 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                  placeholder="Room title"
-                />
-                <span className="text-xs text-muted tabular-nums">
-                  {title.length}/{TITLE_MAX}
-                </span>
-              </div>
-              {fieldErrors.title && (
-                <p className="text-xs text-red-400" role="alert">
-                  {fieldErrors.title}
-                </p>
-              )}
-
-              <span className="text-xs font-medium text-muted whitespace-nowrap">
-                Subtitle
-              </span>
-              <div className="flex items-center gap-1">
-                <input
-                  id="subtitle"
-                  type="text"
-                  value={subtitle}
-                  onChange={(e) =>
-                    setSubtitle(e.target.value.slice(0, DESCRIPTION_MAX))
-                  }
-                  maxLength={DESCRIPTION_MAX}
-                  className="h-9 w-40 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                  placeholder="Optional subtitle"
-                />
-                <span className="text-xs text-muted tabular-nums">
-                  {subtitle.length}/{DESCRIPTION_MAX}
-                </span>
-              </div>
-              {fieldErrors.subtitle && (
-                <p className="text-xs text-red-400" role="alert">
-                  {fieldErrors.subtitle}
-                </p>
-              )}
-
-              <div className="flex flex-1 min-w-[260px] items-center gap-2">
-                <span className="text-xs font-medium text-muted whitespace-nowrap">
-                  Labels ({labels.length}/{LABELS_MAX})
-                </span>
-                <input
-                  type="text"
-                  value={newLabelText}
-                  onChange={(e) =>
-                    setNewLabelText(e.target.value.slice(0, LABEL_TEXT_MAX))
-                  }
-                  maxLength={LABEL_TEXT_MAX}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && (e.preventDefault(), addLabel())
-                  }
-                  className="h-9 w-full min-w-[140px] rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none"
-                  placeholder="Label text"
-                />
-                <span className="text-xs text-muted tabular-nums shrink-0">
-                  {newLabelText.length}/{LABEL_TEXT_MAX}
-                </span>
-                <button
-                  type="button"
-                  onClick={addLabel}
-                  disabled={labels.length >= LABELS_MAX}
-                  className="shrink-0 rounded-lg bg-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-border/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          <div className="mx-auto max-w-6xl px-4 mt-4 min-w-0">
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-1 min-w-0">
+                <label
+                  htmlFor="title"
+                  className="text-xs font-medium text-muted"
                 >
-                  Add
-                </button>
+                  Title
+                </label>
+                <div className="flex flex-wrap items-center gap-1 min-w-0">
+                  <input
+                    id="title"
+                    type="text"
+                    value={title}
+                    onChange={(e) =>
+                      setTitle(e.target.value.slice(0, TITLE_MAX))
+                    }
+                    maxLength={TITLE_MAX}
+                    required
+                    className="h-9 min-w-0 flex-1 max-w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    placeholder="Room title"
+                  />
+                  <span className="text-xs text-muted tabular-nums shrink-0">
+                    {title.length}/{TITLE_MAX}
+                  </span>
+                </div>
+                {fieldErrors.title && (
+                  <p className="text-xs text-red-400" role="alert">
+                    {fieldErrors.title}
+                  </p>
+                )}
               </div>
-              {(fieldErrors.labels ??
-                Object.keys(fieldErrors).some((k) =>
-                  k.startsWith("labels."),
-                )) && (
-                <p className="text-xs text-red-400" role="alert">
-                  {fieldErrors.labels ??
-                    Object.entries(fieldErrors)
-                      .filter(([k]) => k.startsWith("labels."))
-                      .map(([, v]) => v)[0]}
-                </p>
-              )}
+
+              <div className="flex flex-col gap-1 min-w-0">
+                <label
+                  htmlFor="subtitle"
+                  className="text-xs font-medium text-muted"
+                >
+                  Subtitle
+                </label>
+                <div className="flex flex-wrap items-center gap-1 min-w-0">
+                  <input
+                    id="subtitle"
+                    type="text"
+                    value={subtitle}
+                    onChange={(e) =>
+                      setSubtitle(e.target.value.slice(0, DESCRIPTION_MAX))
+                    }
+                    maxLength={DESCRIPTION_MAX}
+                    className="h-9 min-w-0 flex-1 max-w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    placeholder="Optional subtitle"
+                  />
+                  <span className="text-xs text-muted tabular-nums shrink-0">
+                    {subtitle.length}/{DESCRIPTION_MAX}
+                  </span>
+                </div>
+                {fieldErrors.subtitle && (
+                  <p className="text-xs text-red-400" role="alert">
+                    {fieldErrors.subtitle}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1 min-w-0">
+                <label className="text-xs font-medium text-muted">
+                  Labels ({labels.length}/{LABELS_MAX})
+                </label>
+                <div className="flex flex-wrap items-center gap-2 min-w-0">
+                  <input
+                    type="text"
+                    value={newLabelText}
+                    onChange={(e) =>
+                      setNewLabelText(e.target.value.slice(0, LABEL_TEXT_MAX))
+                    }
+                    maxLength={LABEL_TEXT_MAX}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addLabel())
+                    }
+                    className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none"
+                    placeholder="Label text"
+                  />
+                  <span className="text-xs text-muted tabular-nums shrink-0">
+                    {newLabelText.length}/{LABEL_TEXT_MAX}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={addLabel}
+                    disabled={labels.length >= LABELS_MAX}
+                    className="shrink-0 rounded-lg bg-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-border/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add
+                  </button>
+                </div>
+                {(fieldErrors.labels ??
+                  Object.keys(fieldErrors).some((k) =>
+                    k.startsWith("labels."),
+                  )) && (
+                  <p className="text-xs text-red-400" role="alert">
+                    {fieldErrors.labels ??
+                      Object.entries(fieldErrors)
+                        .filter(([k]) => k.startsWith("labels."))
+                        .map(([, v]) => v)[0]}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="mx-auto max-w-6xl px-4 py-2 space-y-4">
+          <div className="mx-auto max-w-6xl min-w-0 px-4 py-2 space-y-4">
             <div className="flex flex-wrap gap-4 md:items-end">
-              <div className="flex-1 min-w-[260px]">
+              <div className="min-w-0 flex-1">
                 <label className="block text-sm font-medium text-foreground">
-                  Existing labels ({labels.length}/{LABELS_MAX})
+                  Labels ({labels.length}/{LABELS_MAX})
                 </label>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-2 flex min-w-0 flex-wrap gap-2">
                   {labels.map((l) => (
                     <span
                       key={l.id}
-                      className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm text-white"
+                      className="inline-flex max-w-full items-center gap-1 truncate rounded-full px-3 py-1 text-sm text-white"
                       style={{ backgroundColor: l.color }}
                     >
-                      {l.text}
+                      <span className="min-w-0 truncate">{l.text}</span>
                       <button
                         type="button"
                         onClick={() => removeLabel(l.id)}
-                        className="ml-1 rounded-full hover:bg-white/20"
+                        className="shrink-0 rounded-full hover:bg-white/20"
                         aria-label={`Remove ${l.text}`}
                       >
                         ×
@@ -263,14 +276,14 @@ export default function CreateRoomPage() {
                     </span>
                   ))}
                 </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <div className="flex gap-1.5">
+                <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {DEFAULT_COLORS.map((color) => (
                       <button
                         key={color}
                         type="button"
                         onClick={() => setNewLabelColor(color)}
-                        className="h-9 w-9 shrink-0 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
+                        className="h-6 w-6 shrink-0 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background sm:h-9 sm:w-9"
                         style={{
                           backgroundColor: color,
                           borderColor:
@@ -290,7 +303,7 @@ export default function CreateRoomPage() {
                     disabled={labels.length >= LABELS_MAX}
                     className="rounded-lg bg-border px-4 py-2 text-sm text-foreground hover:bg-border/80 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Add
+                    Add label
                   </button>
                 </div>
               </div>

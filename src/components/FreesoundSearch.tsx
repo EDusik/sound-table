@@ -89,7 +89,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
     return (
       <details className="group rounded-lg border border-border bg-card/50">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground hover:bg-card/80 [&::-webkit-details-marker]:hidden">
-          <span>Search Freesound</span>
+          <span>🎵 Search Freesound</span>
           <svg
             className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180"
             fill="none"
@@ -139,7 +139,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
   return (
     <details className="group rounded-lg border border-border bg-card/50">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground hover:bg-card/80 [&::-webkit-details-marker]:hidden">
-        <span>Search Freesound</span>
+        <span>🎵 Search Freesound</span>
         {results.length > 0 && (
           <span className="text-xs font-normal text-muted">
             {results.length} result{results.length !== 1 ? "s" : ""}
@@ -161,7 +161,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
         </svg>
       </summary>
       <div className="border-t border-border p-4">
-        <form onSubmit={handleSearch} className="mb-3 flex gap-2">
+        <form onSubmit={handleSearch} className="mb-3 flex flex-wrap gap-2">
           <input
             type="search"
             value={query}
@@ -174,13 +174,13 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
               }
             }}
             placeholder="e.g. rain, piano, alarm…"
-            className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-foreground placeholder-muted focus:border-accent focus:outline-none"
+            className="min-w-0 flex-1 basis-full rounded-lg border border-border bg-card px-3 py-2 text-foreground placeholder-muted focus:border-accent focus:outline-none sm:basis-0"
             aria-label="Search Freesound"
           />
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
+            className="w-full shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50 sm:w-auto"
           >
             {loading ? "Searching…" : "Search"}
           </button>

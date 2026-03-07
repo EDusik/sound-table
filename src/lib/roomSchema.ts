@@ -2,37 +2,37 @@ import { z } from "zod";
 
 export const TITLE_MAX = 32;
 export const DESCRIPTION_MAX = 124;
-export const LABEL_TEXT_MAX = 45;
+export const LABEL_TEXT_MAX = 24;
 export const LABELS_MAX = 5;
 
 const labelSchema = z.object({
-  id: z.string().min(1, "Cada etiqueta deve ter um identificador."),
+  id: z.string().min(1, "Each label must have an identifier."),
   text: z
     .string()
-    .min(1, "O texto da etiqueta não pode ficar em branco.")
-    .max(LABEL_TEXT_MAX, `O texto da etiqueta deve ter no máximo ${LABEL_TEXT_MAX} caracteres.`),
+    .min(1, "Label text cannot be blank.")
+    .max(LABEL_TEXT_MAX, `Label text must be at most ${LABEL_TEXT_MAX} characters.`),
   color: z
     .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, "A cor da etiqueta deve ser um hex válido (ex: #3b82f6)."),
+    .regex(/^#[0-9a-fA-F]{6}$/, "Label color must be a valid hex (e.g. #3b82f6)."),
 });
 
-/** Schema para os dados do formulário de criação/edição de room (sem id/userId/createdAt). */
+/** Schema for room create/edit form data (no id/userId/createdAt). */
 export const roomFormSchema = z.object({
   title: z
     .string()
-    .min(1, "O título da sala é obrigatório.")
-    .max(TITLE_MAX, `O título deve ter no máximo ${TITLE_MAX} caracteres.`),
+    .min(1, "Room title is required.")
+    .max(TITLE_MAX, `Title must be at most ${TITLE_MAX} characters.`),
   subtitle: z
     .string()
-    .max(DESCRIPTION_MAX, `O subtítulo deve ter no máximo ${DESCRIPTION_MAX} caracteres.`),
+    .max(DESCRIPTION_MAX, `Subtitle must be at most ${DESCRIPTION_MAX} characters.`),
   labels: z
     .array(labelSchema)
-    .max(LABELS_MAX, `É permitido no máximo ${LABELS_MAX} etiquetas.`),
+    .max(LABELS_MAX, `At most ${LABELS_MAX} labels are allowed.`),
 });
 
 export type RoomFormData = z.infer<typeof roomFormSchema>;
 
-/** Valida os dados do formulário e retorna erros por campo (chave = nome do campo). */
+/** Validates form data and returns errors per field (key = field name). */
 export function validateRoomForm(data: {
   title: string;
   subtitle: string;

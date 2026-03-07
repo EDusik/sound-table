@@ -17,6 +17,28 @@ import {
   LABELS_MAX,
 } from "@/lib/roomSchema";
 
+function SignOutIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
 const DEFAULT_COLORS = [
   "#f43f5e",
   "#f59e0b",
@@ -168,7 +190,7 @@ export default function DashboardPage() {
           ? err.message
           : err && typeof err === "object" && "message" in err
             ? String((err as { message: string }).message)
-            : "Falha ao salvar.";
+            : "Failed to save.";
       setEditError(message);
     } finally {
       setSaving(false);
@@ -226,7 +248,7 @@ export default function DashboardPage() {
           aria-labelledby="edit-room-title"
         >
           <div
-            className="w-full max-w-lg rounded-xl border border-border bg-card shadow-xl"
+            className="w-full max-w-lg min-w-0 rounded-xl border border-border bg-card shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <form onSubmit={handleSaveEdit}>
@@ -256,11 +278,11 @@ export default function DashboardPage() {
                   </svg>
                 </button>
               </div>
-              <div className="space-y-4 px-5 py-4 text-white">
+              <div className="min-w-0 space-y-6 px-5 py-4 text-foreground">
                 <div>
                   <label
                     htmlFor="edit-title"
-                    className="block text-sm font-medium !text-white"
+                    className="block text-sm font-medium text-foreground"
                   >
                     Title
                   </label>
@@ -290,7 +312,7 @@ export default function DashboardPage() {
                 <div>
                   <label
                     htmlFor="edit-subtitle"
-                    className="block text-sm font-medium !text-white"
+                    className="block text-sm font-medium text-foreground"
                   >
                     Subtitle
                   </label>
@@ -318,22 +340,22 @@ export default function DashboardPage() {
                     </p>
                   )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium !text-white">
+                <div className="min-w-0">
+                  <label className="block text-sm font-medium text-foreground">
                     Labels ({editLabels.length}/{LABELS_MAX})
                   </label>
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="mt-2 flex min-w-0 flex-wrap gap-2">
                     {editLabels.map((l) => (
                       <span
                         key={l.id}
-                        className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm text-white"
+                        className="inline-flex max-w-full items-center gap-1 truncate rounded-full px-3 py-1 text-sm text-white"
                         style={{ backgroundColor: l.color }}
                       >
-                        {l.text}
+                        <span className="min-w-0 truncate">{l.text}</span>
                         <button
                           type="button"
                           onClick={() => removeEditLabel(l.id)}
-                          className="ml-1 rounded-full hover:bg-white/20"
+                          className="shrink-0 rounded-full hover:bg-white/20"
                           aria-label={`Remove ${l.text}`}
                         >
                           ×
@@ -341,7 +363,7 @@ export default function DashboardPage() {
                       </span>
                     ))}
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
                     <input
                       type="text"
                       value={newLabelText}
@@ -359,13 +381,13 @@ export default function DashboardPage() {
                     <span className="text-xs text-muted tabular-nums shrink-0">
                       {newLabelText.length}/{LABEL_TEXT_MAX}
                     </span>
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-wrap gap-1.5">
                       {DEFAULT_COLORS.map((color) => (
                         <button
                           key={color}
                           type="button"
                           onClick={() => setNewLabelColor(color)}
-                          className="h-9 w-9 shrink-0 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-card"
+                          className="h-6 w-6 shrink-0 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-card sm:h-9 sm:w-9"
                           style={{
                             backgroundColor: color,
                             borderColor:
@@ -485,23 +507,33 @@ export default function DashboardPage() {
             <h1 className="text-xl font-semibold text-foreground">
               <SoundTableLogo />
             </h1>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 href="/create-room"
-                className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-background transition hover:bg-accent-hover"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-xl font-medium text-background transition hover:bg-accent-hover sm:h-auto sm:w-auto sm:px-4 sm:py-2.5 sm:text-sm"
+                aria-label="New Room"
+                title="New Room"
               >
-                New Room
+                <span className="sm:hidden" aria-hidden>
+                  +
+                </span>
+                <span className="hidden sm:inline">New Room</span>
               </Link>
               <button
                 type="button"
                 onClick={() => signOut()}
-                className="rounded-lg border border-border px-3 py-2.5 text-sm text-foreground transition hover:bg-card"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-foreground transition hover:bg-card sm:h-auto sm:w-auto sm:px-3 sm:py-2.5 sm:text-sm"
+                aria-label="Sign out"
+                title="Sign out"
               >
-                Sign out
+                <span className="sm:hidden" aria-hidden>
+                  <SignOutIcon className="h-5 w-5" />
+                </span>
+                <span className="hidden sm:inline">Sign out</span>
               </button>
 
               {user ? (
-                <span className="flex items-center gap-2 rounded-lg border border-border bg-card/80 px-3 py-1.5 text-sm text-foreground">
+                <span className="flex items-center gap-2 rounded-lg border border-border bg-card/80 px-1.5 py-1.5 sm:px-3 sm:py-1.5 text-sm text-foreground">
                   {user.photoURL ? (
                     <Image
                       src={user.photoURL}
@@ -515,7 +547,7 @@ export default function DashboardPage() {
                       {(user.displayName ?? user.email ?? "?")[0].toUpperCase()}
                     </span>
                   )}
-                  <span className="max-w-[140px] truncate">
+                  <span className="max-w-[140px] truncate hidden sm:inline">
                     {user.displayName ?? user.email ?? "User"}
                   </span>
                 </span>

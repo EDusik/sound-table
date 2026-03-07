@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthGuard } from "./AuthGuard";
 import { AudioBar } from "./AudioBar";
 import { GlobalAuthLoading } from "./GlobalAuthLoading";
+import { ThemeFavicon } from "./ThemeFavicon";
 
 function AuthShell({ children }: { children: React.ReactNode }) {
   const { loading } = useAuth();
@@ -20,6 +21,7 @@ function AuthShell({ children }: { children: React.ReactNode }) {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
+      <ThemeFavicon />
       <AuthProvider>
         <AuthShell>{children}</AuthShell>
       </AuthProvider>

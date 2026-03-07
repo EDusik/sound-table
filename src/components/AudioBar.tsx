@@ -41,7 +41,7 @@ export function AudioBar() {
       role="region"
       aria-label="Now playing"
     >
-      <div className="mx-auto flex max-w-4xl flex-col gap-2 px-4 py-3">
+      <div className="flex w-full flex-col gap-2 px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-medium text-muted">
             Playing ({playing.length})
@@ -50,18 +50,18 @@ export function AudioBar() {
             type="button"
             onClick={stopAll}
             className="rounded-lg bg-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-border/80"
-            title="Parar todos os sons"
+            title="Stop all songs"
           >
-            Parar todos
+            Stop all
           </button>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2">
           {playing.map((p) => (
             <div
               key={p.id}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3"
+              className="flex w-full items-center gap-3 rounded-lg border-2 border-accent bg-card px-4 py-3"
             >
-              <span className="max-w-[120px] truncate text-sm font-medium text-foreground sm:max-w-[200px]">
+              <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                 {p.name}
               </span>
               <div className="flex items-center gap-2">

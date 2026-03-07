@@ -337,7 +337,7 @@ export default function RoomPage() {
                 id="add-sound-modal-title"
                 className="text-lg font-semibold text-foreground"
               >
-                Add sound
+                🔊 Add sound
               </h2>
               <button
                 type="button"
@@ -373,14 +373,14 @@ export default function RoomPage() {
               </div>
               <details className="rounded-lg border border-border bg-card/50">
                 <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-foreground">
-                  Add Audio
+                  Add audio
                 </summary>
                 <form
                   onSubmit={handleAddAudio}
                   className="space-y-3 border-t border-border p-4"
                 >
                   <div>
-                    <label className="block text-xs text-white">Name</label>
+                    <label className="block text-xs text-foreground">Name</label>
                     <input
                       type="text"
                       value={addName}
@@ -390,7 +390,7 @@ export default function RoomPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-white">
+                    <label className="block text-xs text-foreground">
                       Source URL (public MP3/audio)
                     </label>
                     <input
@@ -407,22 +407,22 @@ export default function RoomPage() {
                   <button
                     type="submit"
                     disabled={adding}
-                    className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
+                    className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
                   >
-                    {adding ? "Adding…" : "Add"}
+                    {adding ? "Adding…" : "Add audio"}
                   </button>
                 </form>
               </details>
               <details className="rounded-lg border border-border bg-card/50">
                 <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-foreground">
-                  Add YouTube Audio
+                  Add YouTube audio
                 </summary>
                 <form
                   onSubmit={handleAddYouTubeAudio}
                   className="space-y-3 border-t border-border p-4"
                 >
                   <div>
-                    <label className="block text-xs text-white">
+                    <label className="block text-xs text-foreground">
                       YouTube link or ID
                     </label>
                     <input
@@ -439,9 +439,9 @@ export default function RoomPage() {
                   <button
                     type="submit"
                     disabled={addingYoutube}
-                    className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
+                    className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
                   >
-                    {addingYoutube ? "Adding…" : "Add"}
+                    {addingYoutube ? "Adding…" : "Add YouTube audio"}
                   </button>
                 </form>
               </details>
@@ -454,20 +454,25 @@ export default function RoomPage() {
           <div className="mx-auto flex max-w-6xl flex-1 items-center justify-between gap-2 px-4 py-2">
             <Link
               href="/dashboard"
-              className="text-sm text-muted hover:text-foreground"
+              className="flex items-center gap-1 text-sm text-muted hover:text-foreground"
+              aria-label="Back to Dashboard"
             >
-              ← Dashboard
+              <span aria-hidden>←</span>
+              <span className="hidden sm:inline"> Dashboard</span>
             </Link>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setShowAddSoundModal(true)}
-                className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-background hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-lg font-medium text-background hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background sm:h-auto sm:w-auto sm:px-4 sm:py-2.5 sm:text-sm"
+                aria-label="Add sound"
+                title="Add sound"
               >
-                Add sound
+                <span className="sm:hidden" aria-hidden>+</span>
+                <span className="hidden sm:inline">Add sound</span>
               </button>
               {user ? (
-                <span className="flex items-center gap-2 rounded-lg border border-border bg-card/80 px-2.5 py-2 text-sm text-foreground">
+                <span className="flex items-center gap-2 rounded-lg border border-border bg-card/80 px-1.5 py-1.5 sm:px-2.5 sm:py-2 text-sm text-foreground">
                   {user.photoURL ? (
                     <Image
                       src={user.photoURL}
@@ -481,7 +486,7 @@ export default function RoomPage() {
                       {(user.displayName ?? user.email ?? "?")[0].toUpperCase()}
                     </span>
                   )}
-                  <span className="max-w-[120px] truncate">
+                  <span className="max-w-[120px] truncate hidden sm:inline">
                     {user.displayName ?? user.email ?? "User"}
                   </span>
                 </span>

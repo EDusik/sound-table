@@ -191,8 +191,8 @@ function YouTubeAudioRow({
 
   return (
     <div
-      className={`flex flex-col gap-2 rounded-lg border border-border/50 bg-card/50 p-4 sm:flex-row sm:items-start sm:gap-4 ${
-        isInactive ? "opacity-40" : ""
+      className={`flex flex-col gap-2 rounded-lg border bg-card/50 p-4 sm:flex-row sm:items-start sm:gap-4 ${
+        isPlaying ? "border-2 border-accent" : "border-border/50"
       }`}
     >
       <div className="flex items-start gap-3 sm:flex-1">
@@ -205,53 +205,99 @@ function YouTubeAudioRow({
             aria-label={isInactive ? "Re-enable audio" : "Disable audio"}
           />
         </label>
-        <div className="min-w-0 flex-1">
+        <div
+          className={`min-w-0 flex-1 ${isInactive ? "opacity-40" : ""}`}
+          aria-hidden={isInactive}
+        >
           <p className="truncate font-medium text-foreground">{audio.name}</p>
           <a
             href={watchUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="truncate text-xs text-accent hover:underline"
+            className="break-all text-xs text-accent hover:underline"
           >
             {watchUrl}
           </a>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-        {!isPlaying ? (
-          <button
-            type="button"
-            onClick={handlePlay}
-            className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
-            title="Play"
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+        <div className="flex items-center gap-2">
+          <div
+            className={`flex items-center gap-2 ${isInactive ? "opacity-40 pointer-events-none" : ""}`}
           >
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handlePause}
-            className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
-            title="Pause"
-          >
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-            </svg>
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={handleStop}
-          className="rounded-lg bg-border p-2 text-foreground hover:bg-border/80"
-          title="Stop"
+            {!isPlaying ? (
+              <button
+                type="button"
+                onClick={handlePlay}
+                className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
+                title="Play"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePause}
+                className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
+                title="Pause"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                </svg>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleStop}
+              className="rounded-lg bg-border p-2 text-foreground hover:bg-border/80"
+              title="Stop"
+            >
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={handleLoop}
+              title={loop ? "Loop on" : "Loop off"}
+              className={`rounded p-1.5 text-xs ${
+                loop
+                  ? "bg-accent-soft/50 text-accent"
+                  : "text-muted hover:bg-border"
+              }`}
+            >
+              Loop
+            </button>
+          </div>
+          {onDelete ? (
+            <button
+              type="button"
+              onClick={() => onDelete(audio)}
+              className="rounded-lg p-2 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+              title="Delete sound"
+              aria-label="Delete sound"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+          ) : null}
+        </div>
+        <label
+          className={`flex w-full items-center gap-1 text-xs text-muted sm:w-auto ${isInactive ? "opacity-40 pointer-events-none" : ""}`}
         >
-          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-            <rect x="6" y="6" width="12" height="12" />
-          </svg>
-        </button>
-        <label className="flex items-center gap-1 text-xs text-muted">
           <span>Vol</span>
           <input
             type="range"
@@ -260,44 +306,9 @@ function YouTubeAudioRow({
             step="0.05"
             value={volume}
             onChange={handleVolume}
-            className="w-20"
+            className="w-20 flex-1 min-w-0 sm:flex-initial"
           />
         </label>
-        <button
-          type="button"
-          onClick={handleLoop}
-          title={loop ? "Loop on" : "Loop off"}
-          className={`rounded p-1.5 text-xs ${
-            loop
-              ? "bg-accent-soft/50 text-accent"
-              : "text-muted hover:bg-border"
-          }`}
-        >
-          Loop
-        </button>
-        {onDelete ? (
-          <button
-            type="button"
-            onClick={() => onDelete(audio)}
-            className="rounded-lg p-2 text-red-400 hover:bg-red-500/20 hover:text-red-300"
-            title="Delete sound"
-            aria-label="Delete sound"
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-          </button>
-        ) : null}
       </div>
       <div className="hidden">
         <div ref={containerRef} />
@@ -384,8 +395,8 @@ function HtmlAudioRow({
 
   return (
     <div
-      className={`flex flex-col gap-2 rounded-lg border border-border/50 bg-card/50 p-4 sm:flex-row sm:items-center sm:gap-4 ${
-        isInactive ? "opacity-40" : ""
+      className={`flex flex-col gap-2 rounded-lg border bg-card/50 p-4 sm:flex-row sm:items-center sm:gap-4 ${
+        isPlaying ? "border-2 border-accent" : "border-border/50"
       }`}
     >
       <audio
@@ -408,46 +419,88 @@ function HtmlAudioRow({
             aria-label={isInactive ? "Re-enable audio" : "Disable audio"}
           />
         </label>
-        <div className="min-w-0 flex-1">
+        <div
+          className={`min-w-0 flex-1 ${isInactive ? "opacity-40" : ""}`}
+          aria-hidden={isInactive}
+        >
           <p className="truncate font-medium text-foreground">{audio.name}</p>
           <p className="truncate text-xs text-muted">{audio.sourceUrl}</p>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        {!isPlaying ? (
-          <button
-            type="button"
-            onClick={handlePlay}
-            className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
-            title="Play"
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex items-center gap-2">
+          <div
+            className={`flex items-center gap-2 ${isInactive ? "opacity-40 pointer-events-none" : ""}`}
           >
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handlePause}
-            className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
-            title="Pause"
-          >
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-            </svg>
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={handleStop}
-          className="rounded-lg bg-border p-2 text-foreground hover:bg-border/80"
-          title="Stop"
+            {!isPlaying ? (
+              <button
+                type="button"
+                onClick={handlePlay}
+                className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
+                title="Play"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePause}
+                className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
+                title="Pause"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                </svg>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleStop}
+              className="rounded-lg bg-border p-2 text-foreground hover:bg-border/80"
+              title="Stop"
+            >
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={handleLoop}
+              title={player?.loop ? "Loop on" : "Loop off"}
+              className={`rounded p-1.5 text-xs ${player?.loop ? "bg-accent-soft/50 text-accent" : "text-muted hover:bg-border"}`}
+            >
+              Loop
+            </button>
+          </div>
+          {onDelete ? (
+            <button
+              type="button"
+              onClick={() => onDelete(audio)}
+              className="rounded-lg p-2 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+              title="Delete sound"
+              aria-label="Delete sound"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+          ) : null}
+        </div>
+        <label
+          className={`flex w-full items-center gap-1 text-xs text-muted sm:w-auto ${isInactive ? "opacity-40 pointer-events-none" : ""}`}
         >
-          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-            <rect x="6" y="6" width="12" height="12" />
-          </svg>
-        </button>
-        <label className="flex items-center gap-1 text-xs text-muted">
           <span>Vol</span>
           <input
             type="range"
@@ -456,40 +509,9 @@ function HtmlAudioRow({
             step="0.05"
             value={volume}
             onChange={handleVolume}
-            className="w-20"
+            className="w-20 flex-1 min-w-0 sm:flex-initial"
           />
         </label>
-        <button
-          type="button"
-          onClick={handleLoop}
-          title={player?.loop ? "Loop on" : "Loop off"}
-          className={`rounded p-1.5 text-xs ${player?.loop ? "bg-accent-soft/50 text-accent" : "text-muted hover:bg-border"}`}
-        >
-          Loop
-        </button>
-        {onDelete ? (
-          <button
-            type="button"
-            onClick={() => onDelete(audio)}
-            className="rounded-lg p-2 text-red-400 hover:bg-red-500/20 hover:text-red-300"
-            title="Delete sound"
-            aria-label="Delete sound"
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-          </button>
-        ) : null}
       </div>
     </div>
   );
