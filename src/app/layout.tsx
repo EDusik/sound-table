@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Cinzel } from "next/font/google";
 import "./globals.css";
 import { Footer } from "@/components/Footer";
+import { JsonLd } from "@/components/JsonLd";
 import { Providers } from "@/components/Providers";
+import { siteMetadata } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,10 +23,15 @@ const cinzel = Cinzel({
   weight: ["400", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: "SoundTable",
-  description: "Create the perfect sound space for every RPG session.",
-  icons: { icon: "/icon.svg" },
+export const metadata = siteMetadata;
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#EEF2F7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0F0E17" },
+  ],
 };
 
 export default function RootLayout({
@@ -38,6 +44,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} flex min-h-dvh flex-col antialiased`}
       >
+        <JsonLd />
         <Script
           id="theme-init"
           strategy="beforeInteractive"
@@ -50,7 +57,11 @@ export default function RootLayout({
           >
             Skip to main content
           </a>
-          <main id="main-content" className="min-h-0 flex-1 overflow-auto bg-background" tabIndex={-1}>
+          <main
+            id="main-content"
+            className="min-h-0 flex-1 overflow-auto bg-background"
+            tabIndex={-1}
+          >
             {children}
           </main>
           <Footer />
