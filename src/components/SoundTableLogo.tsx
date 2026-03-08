@@ -17,7 +17,7 @@ export function SoundTableLogo({ className }: SoundTableLogoProps) {
       >
         🎲
       </span>
-      <span className="hidden sm:inline"> SoundTable</span>
+      <span className="inline"> SoundTable</span>
     </span>
   );
 }

@@ -1,4 +1,4 @@
-import type { Room, AudioItem, AudioKind } from "./types";
+import type { Scene, AudioItem, AudioKind } from "./types";
 import { getFirebaseDb, useFirestore } from "./firebase";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import {
@@ -13,8 +13,8 @@ import {
   orderBy,
 } from "firebase/firestore";
 
-const ROOMS_KEY = "audio_rooms_rooms";
-const AUDIOS_KEY = "audio_rooms_audios";
+const SCENES_KEY = "audio_scenes_scenes";
+const AUDIOS_KEY = "audio_scenes_audios";
 
 /** Returns the Supabase session user id or null (demo / not logged in). */
 async function getSupabaseUserId(): Promise<string | null> {
@@ -38,12 +38,122 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/** Max size for audio uploads (25 MB). */
+export const AUDIO_UPLOAD_MAX_BYTES = 25 * 1024 * 1024;
+
+/** Allowed audio extensions (mp3 preferred, plus wav and ogg). */
+export const ALLOWED_AUDIO_EXTENSIONS = [".mp3", ".wav", ".ogg"] as const;
+
+const EXT_TO_MIME: Record<string, string> = {
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+  ".ogg": "audio/ogg",
+};
+
+function getExtensionFromFileName(name: string): string | null {
+  const lower = name.toLowerCase();
+  for (const ext of ALLOWED_AUDIO_EXTENSIONS) {
+    if (lower.endsWith(ext)) return ext;
+  }
+  return null;
+}
+
+/**
+ * Returns true if the URL path (or filename) ends with an allowed audio extension.
+ */
+export function isAllowedAudioUrl(url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname;
+    const lower = pathname.toLowerCase();
+    return ALLOWED_AUDIO_EXTENSIONS.some((ext) => lower.endsWith(ext));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Returns the file extension if the file is allowed, otherwise null.
+ */
+export function getAllowedAudioExtension(file: File): string | null {
+  return getExtensionFromFileName(file.name);
+}
+
+/**
+ * Uploads an audio file (MP3, WAV or OGG) to Supabase Storage and returns the public URL.
+ * Requires Supabase and authenticated user. File must be <= AUDIO_UPLOAD_MAX_BYTES.
+ */
+export async function uploadAudioFile(
+  sceneId: string,
+  file: File,
+): Promise<string> {
+  if (!supabase || !isSupabaseConfigured) {
+    throw new Error("Upload is not available. Sign in with Supabase to upload files.");
+  }
+  const userId = await getSupabaseUserId();
+  if (!userId) {
+    throw new Error("You must be signed in to upload files.");
+  }
+  const ext = getAllowedAudioExtension(file);
+  if (!ext) {
+    throw new Error(
+      `Invalid file type. Allowed formats: ${ALLOWED_AUDIO_EXTENSIONS.join(", ")}`,
+    );
+  }
+  if (file.size > AUDIO_UPLOAD_MAX_BYTES) {
+    throw new Error(
+      `File is too large. Maximum size is ${AUDIO_UPLOAD_MAX_BYTES / 1024 / 1024} MB.`,
+    );
+  }
+  const path = `${userId}/${sceneId}/${generateId()}${ext}`;
+  const contentType = EXT_TO_MIME[ext] ?? "audio/mpeg";
+  const client = supabase;
+
+  const doUpload = () =>
+    client!.storage
+      .from("audios")
+      .upload(path, file, { contentType, upsert: false });
+
+  let result = await doUpload();
+  if (result.error) {
+    const msg = result.error.message?.toLowerCase() ?? "";
+    const isBucketMissing =
+      msg.includes("bucket") &&
+      (msg.includes("not found") || msg.includes("does not exist"));
+    if (isBucketMissing && typeof fetch !== "undefined") {
+      const ensureRes = await fetch("/api/ensure-audios-bucket", {
+        method: "POST",
+      });
+      if (ensureRes.ok) {
+        result = await doUpload();
+        if (!result.error) {
+          const {
+            data: { publicUrl },
+          } = client!.storage.from("audios").getPublicUrl(path);
+          return publicUrl;
+        }
+      }
+    }
+    if (result.error) {
+      if (isBucketMissing) {
+        throw new Error(
+          "Bucket 'audios' not found. Add SUPABASE_SERVICE_ROLE_KEY to .env (Supabase Dashboard → Settings → API) and try again so the app can create the bucket.",
+        );
+      }
+      throw result.error;
+    }
+  }
+  const {
+    data: { publicUrl },
+  } = client!.storage.from("audios").getPublicUrl(path);
+  return publicUrl;
+}
+
 // ——— localStorage ———
-function getLocalRooms(userId: string): Room[] {
+function getLocalScenes(userId: string): Scene[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(ROOMS_KEY);
-    const all: Room[] = raw ? JSON.parse(raw) : [];
+    const raw = localStorage.getItem(SCENES_KEY);
+    const all: Scene[] = raw ? JSON.parse(raw) : [];
     return all
       .filter((r) => r.userId === userId)
       .sort((a, b) => {
@@ -56,54 +166,54 @@ function getLocalRooms(userId: string): Room[] {
   }
 }
 
-function getLocalRoom(roomId: string): Room | null {
+function getLocalScene(sceneId: string): Scene | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(ROOMS_KEY);
-    const all: Room[] = raw ? JSON.parse(raw) : [];
-    return all.find((r) => r.id === roomId) ?? null;
+    const raw = localStorage.getItem(SCENES_KEY);
+    const all: Scene[] = raw ? JSON.parse(raw) : [];
+    return all.find((r) => r.id === sceneId) ?? null;
   } catch {
     return null;
   }
 }
 
-function setLocalRoom(room: Room): void {
+function setLocalScene(scene: Scene): void {
   if (typeof window === "undefined") return;
   try {
-    const raw = localStorage.getItem(ROOMS_KEY);
-    const all: Room[] = raw ? JSON.parse(raw) : [];
-    const idx = all.findIndex((r) => r.id === room.id);
-    if (idx >= 0) all[idx] = room;
-    else all.push(room);
-    localStorage.setItem(ROOMS_KEY, JSON.stringify(all));
+    const raw = localStorage.getItem(SCENES_KEY);
+    const all: Scene[] = raw ? JSON.parse(raw) : [];
+    const idx = all.findIndex((r) => r.id === scene.id);
+    if (idx >= 0) all[idx] = scene;
+    else all.push(scene);
+    localStorage.setItem(SCENES_KEY, JSON.stringify(all));
   } catch {
     // ignore
   }
 }
 
-function deleteLocalRoom(roomId: string): void {
+function deleteLocalScene(sceneId: string): void {
   if (typeof window === "undefined") return;
   try {
-    const raw = localStorage.getItem(ROOMS_KEY);
-    const all: Room[] = raw ? JSON.parse(raw) : [];
-    const next = all.filter((r) => r.id !== roomId);
-    localStorage.setItem(ROOMS_KEY, JSON.stringify(next));
+    const raw = localStorage.getItem(SCENES_KEY);
+    const all: Scene[] = raw ? JSON.parse(raw) : [];
+    const next = all.filter((r) => r.id !== sceneId);
+    localStorage.setItem(SCENES_KEY, JSON.stringify(next));
     const audiosRaw = localStorage.getItem(AUDIOS_KEY);
     const audios: AudioItem[] = audiosRaw ? JSON.parse(audiosRaw) : [];
-    const audiosNext = audios.filter((a) => a.roomId !== roomId);
+    const audiosNext = audios.filter((a) => a.sceneId !== sceneId);
     localStorage.setItem(AUDIOS_KEY, JSON.stringify(audiosNext));
   } catch {
     // ignore
   }
 }
 
-function getLocalAudios(roomId: string): AudioItem[] {
+function getLocalAudios(sceneId: string): AudioItem[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(AUDIOS_KEY);
     const all: AudioItem[] = raw ? JSON.parse(raw) : [];
     return all
-      .filter((a) => a.roomId === roomId)
+      .filter((a) => a.sceneId === sceneId)
       .sort((a, b) => {
         const aOrder = a.order ?? a.createdAt;
         const bOrder = b.order ?? b.createdAt;
@@ -143,7 +253,7 @@ function deleteLocalAudio(audioId: string): void {
 }
 
 // ——— Supabase ———
-function roomFromRow(row: {
+function sceneFromRow(row: {
   id: string;
   user_id: string;
   title: string;
@@ -151,9 +261,9 @@ function roomFromRow(row: {
   labels: unknown;
   created_at: string;
   order: number | null;
-}): Room {
+}): Scene {
   const labels = Array.isArray(row.labels)
-    ? (row.labels as Room["labels"])
+    ? (row.labels as Scene["labels"])
     : [];
   return {
     id: row.id,
@@ -168,7 +278,7 @@ function roomFromRow(row: {
 
 function audioFromRow(row: {
   id: string;
-  room_id: string;
+  scene_id: string;
   name: string;
   source_url: string;
   kind: string | null;
@@ -177,7 +287,7 @@ function audioFromRow(row: {
 }): AudioItem {
   return {
     id: row.id,
-    roomId: row.room_id,
+    sceneId: row.scene_id,
     name: row.name,
     sourceUrl: row.source_url,
     kind: (row.kind as AudioItem["kind"]) ?? "file",
@@ -186,15 +296,15 @@ function audioFromRow(row: {
   };
 }
 
-async function getSupabaseRooms(userId: string): Promise<Room[]> {
+async function getSupabaseScenes(userId: string): Promise<Scene[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
-    .from("rooms")
+    .from("scenes")
     .select("*")
     .eq("user_id", userId)
     .order("order", { ascending: true, nullsFirst: false });
   if (error) throw error;
-  const list = (data ?? []).map(roomFromRow);
+  const list = (data ?? []).map(sceneFromRow);
   return list.sort((a, b) => {
     const aVal = a.order !== undefined ? a.order : -a.createdAt;
     const bVal = b.order !== undefined ? b.order : -b.createdAt;
@@ -202,53 +312,52 @@ async function getSupabaseRooms(userId: string): Promise<Room[]> {
   });
 }
 
-async function getSupabaseRoom(roomId: string): Promise<Room | null> {
+async function getSupabaseScene(sceneId: string): Promise<Scene | null> {
   if (!supabase) return null;
   const { data, error } = await supabase
-    .from("rooms")
+    .from("scenes")
     .select("*")
-    .eq("id", roomId)
+    .eq("id", sceneId)
     .single();
   if (error || !data) return null;
-  return roomFromRow(data);
+  return sceneFromRow(data);
 }
 
-async function setSupabaseRoom(room: Room): Promise<void> {
+async function setSupabaseScene(scene: Scene): Promise<void> {
   if (!supabase) return;
   const payload = {
-    id: room.id,
-    user_id: room.userId,
-    title: room.title,
-    description: room.description ?? "",
-    labels: room.labels ?? [],
-    created_at: new Date(room.createdAt ?? Date.now()).toISOString(),
-    order: room.order ?? null,
+    id: scene.id,
+    user_id: scene.userId,
+    title: scene.title,
+    description: scene.description ?? "",
+    labels: scene.labels ?? [],
+    created_at: new Date(scene.createdAt ?? Date.now()).toISOString(),
+    order: scene.order ?? null,
   };
-  const { error } = await supabase.from("rooms").upsert(payload, {
+  const { error } = await supabase.from("scenes").upsert(payload, {
     onConflict: "id",
   });
   if (error)
-    throw new Error(error.message || "Failed to save room");
+    throw new Error(error.message || "Failed to save scene");
 }
 
-async function deleteSupabaseRoom(roomId: string): Promise<void> {
+async function deleteSupabaseScene(sceneId: string): Promise<void> {
   if (!supabase) return;
-  // Delete room audios first (the migration also has on delete cascade as a safeguard)
   const { error: audiosError } = await supabase
     .from("audios")
     .delete()
-    .eq("room_id", roomId);
+    .eq("scene_id", sceneId);
   if (audiosError) throw audiosError;
-  const { error } = await supabase.from("rooms").delete().eq("id", roomId);
+  const { error } = await supabase.from("scenes").delete().eq("id", sceneId);
   if (error) throw error;
 }
 
-async function getSupabaseAudios(roomId: string): Promise<AudioItem[]> {
+async function getSupabaseAudios(sceneId: string): Promise<AudioItem[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("audios")
     .select("*")
-    .eq("room_id", roomId)
+    .eq("scene_id", sceneId)
     .order("created_at", { ascending: true });
   if (error) throw error;
   const list = (data ?? []).map(audioFromRow);
@@ -263,7 +372,7 @@ async function setSupabaseAudio(audio: AudioItem): Promise<void> {
   if (!supabase) return;
   const payload = {
     id: audio.id,
-    room_id: audio.roomId,
+    scene_id: audio.sceneId,
     name: audio.name,
     source_url: audio.sourceUrl,
     kind: audio.kind ?? "file",
@@ -283,16 +392,16 @@ async function deleteSupabaseAudio(audioId: string): Promise<void> {
 }
 
 // ——— Firestore ———
-async function getFirestoreRooms(userId: string): Promise<Room[]> {
+async function getFirestoreScenes(userId: string): Promise<Scene[]> {
   const database = getFirebaseDb();
-  if (!database) return getLocalRooms(userId);
-  const q = query(collection(database, "rooms"), where("userId", "==", userId));
+  if (!database) return getLocalScenes(userId);
+  const q = query(collection(database, "scenes"), where("userId", "==", userId));
   const snap = await getDocs(q);
   const list = snap.docs.map((d) => {
     const data = d.data();
     const createdAt = data.createdAt?.toMillis?.() ?? data.createdAt ?? 0;
     const order = data.order;
-    return { id: d.id, ...data, createdAt, order } as Room;
+    return { id: d.id, ...data, createdAt, order } as Scene;
   });
   return list.sort((a, b) => {
     const aVal = a.order !== undefined ? a.order : -a.createdAt;
@@ -301,59 +410,60 @@ async function getFirestoreRooms(userId: string): Promise<Room[]> {
   });
 }
 
-async function getFirestoreRoom(roomId: string): Promise<Room | null> {
+async function getFirestoreScene(sceneId: string): Promise<Scene | null> {
   const database = getFirebaseDb();
-  if (!database) return getLocalRoom(roomId);
-  const d = await getDoc(doc(database, "rooms", roomId));
+  if (!database) return getLocalScene(sceneId);
+  const d = await getDoc(doc(database, "scenes", sceneId));
   if (!d.exists()) return null;
   const data = d.data();
   const createdAt = data.createdAt?.toMillis?.() ?? data.createdAt ?? 0;
-  return { id: d.id, ...data, createdAt } as Room;
+  return { id: d.id, ...data, createdAt } as Scene;
 }
 
-async function setFirestoreRoom(room: Room): Promise<void> {
+async function setFirestoreScene(scene: Scene): Promise<void> {
   const database = getFirebaseDb();
   if (!database) {
-    setLocalRoom(room);
+    setLocalScene(scene);
     return;
   }
-  const { id, ...data } = room;
+  const { id, ...data } = scene;
   const payload: Record<string, unknown> = {
     ...data,
     createdAt: data.createdAt ?? Date.now(),
   };
   if (data.order !== undefined) payload.order = data.order;
-  await setDoc(doc(database, "rooms", id), payload);
+  await setDoc(doc(database, "scenes", id), payload);
 }
 
-async function deleteFirestoreRoom(roomId: string): Promise<void> {
+async function deleteFirestoreScene(sceneId: string): Promise<void> {
   const database = getFirebaseDb();
   if (!database) {
-    deleteLocalRoom(roomId);
+    deleteLocalScene(sceneId);
     return;
   }
-  await deleteDoc(doc(database, "rooms", roomId));
+  await deleteDoc(doc(database, "scenes", sceneId));
   const audiosSnap = await getDocs(
-    query(collection(database, "audios"), where("roomId", "==", roomId)),
+    query(collection(database, "audios"), where("sceneId", "==", sceneId)),
   );
   for (const d of audiosSnap.docs) {
     await deleteDoc(d.ref);
   }
 }
 
-async function getFirestoreAudios(roomId: string): Promise<AudioItem[]> {
+async function getFirestoreAudios(sceneId: string): Promise<AudioItem[]> {
   const database = getFirebaseDb();
-  if (!database) return getLocalAudios(roomId);
+  if (!database) return getLocalAudios(sceneId);
   const q = query(
     collection(database, "audios"),
-    where("roomId", "==", roomId),
+    where("sceneId", "==", sceneId),
     orderBy("createdAt", "asc"),
   );
   const snap = await getDocs(q);
   const list = snap.docs.map((d) => {
     const data = d.data();
     const createdAt = data.createdAt?.toMillis?.() ?? data.createdAt ?? 0;
-    return { id: d.id, ...data, createdAt } as AudioItem;
+    const sid = data.sceneId;
+    return { id: d.id, ...data, createdAt, sceneId: sid } as AudioItem;
   });
   return list.sort((a, b) => {
     const aOrder = a.order ?? a.createdAt;
@@ -371,6 +481,7 @@ async function setFirestoreAudio(audio: AudioItem): Promise<void> {
   const { id, ...data } = audio;
   const payload: Record<string, unknown> = {
     ...data,
+    sceneId: audio.sceneId,
     createdAt: data.createdAt ?? Date.now(),
   };
   if (data.order !== undefined) payload.order = data.order;
@@ -387,36 +498,36 @@ async function deleteFirestoreAudio(audioId: string): Promise<void> {
 }
 
 // ——— Public API ———
-export async function getRooms(userId: string): Promise<Room[]> {
-  if (useFirestore()) return getFirestoreRooms(userId);
+export async function getScenes(userId: string): Promise<Scene[]> {
+  if (useFirestore()) return getFirestoreScenes(userId);
   if (useSupabaseStorage()) {
     const uid = await getSupabaseUserId();
-    if (uid) return getSupabaseRooms(uid);
+    if (uid) return getSupabaseScenes(uid);
   }
-  return Promise.resolve(getLocalRooms(userId));
+  return Promise.resolve(getLocalScenes(userId));
 }
 
-export async function getRoom(roomId: string): Promise<Room | null> {
-  if (useFirestore()) return getFirestoreRoom(roomId);
+export async function getScene(sceneId: string): Promise<Scene | null> {
+  if (useFirestore()) return getFirestoreScene(sceneId);
   if (useSupabaseStorage()) {
     const uid = await getSupabaseUserId();
-    if (uid) return getSupabaseRoom(roomId);
+    if (uid) return getSupabaseScene(sceneId);
   }
-  return Promise.resolve(getLocalRoom(roomId));
+  return Promise.resolve(getLocalScene(sceneId));
 }
 
-export async function createRoom(
+export async function createScene(
   userId: string,
-  data: { title: string; description: string; labels: Room["labels"] },
-): Promise<Room> {
+  data: { title: string; description: string; labels: Scene["labels"] },
+): Promise<Scene> {
   const id = generateId();
   let effectiveUserId = userId;
   if (useSupabaseStorage()) {
     const sessionUserId = await getSupabaseUserId();
     if (sessionUserId) effectiveUserId = sessionUserId;
   }
-  const existing = await getRooms(effectiveUserId);
-  const room: Room = {
+  const existing = await getScenes(effectiveUserId);
+  const scene: Scene = {
     id,
     title: data.title,
     description: data.description,
@@ -426,54 +537,54 @@ export async function createRoom(
     order: existing.length,
   };
   if (useFirestore()) {
-    await setFirestoreRoom(room);
+    await setFirestoreScene(scene);
   } else if (useSupabaseStorage() && (await getSupabaseUserId())) {
-    await setSupabaseRoom(room);
+    await setSupabaseScene(scene);
   } else {
-    setLocalRoom(room);
+    setLocalScene(scene);
   }
-  return room;
+  return scene;
 }
 
-export async function updateRoom(room: Room): Promise<void> {
+export async function updateScene(scene: Scene): Promise<void> {
   if (useFirestore()) {
-    await setFirestoreRoom(room);
+    await setFirestoreScene(scene);
   } else if (useSupabaseStorage() && (await getSupabaseUserId())) {
-    await setSupabaseRoom(room);
+    await setSupabaseScene(scene);
   } else {
-    setLocalRoom(room);
+    setLocalScene(scene);
   }
 }
 
-export async function deleteRoom(roomId: string): Promise<void> {
+export async function deleteScene(sceneId: string): Promise<void> {
   if (useFirestore()) {
-    await deleteFirestoreRoom(roomId);
+    await deleteFirestoreScene(sceneId);
   } else if (useSupabaseStorage() && (await getSupabaseUserId())) {
-    await deleteSupabaseRoom(roomId);
+    await deleteSupabaseScene(sceneId);
   } else {
-    deleteLocalRoom(roomId);
+    deleteLocalScene(sceneId);
   }
 }
 
-export async function getAudios(roomId: string): Promise<AudioItem[]> {
-  if (useFirestore()) return getFirestoreAudios(roomId);
+export async function getAudios(sceneId: string): Promise<AudioItem[]> {
+  if (useFirestore()) return getFirestoreAudios(sceneId);
   if (useSupabaseStorage()) {
     const uid = await getSupabaseUserId();
-    if (uid) return getSupabaseAudios(roomId);
+    if (uid) return getSupabaseAudios(sceneId);
   }
-  return Promise.resolve(getLocalAudios(roomId));
+  return Promise.resolve(getLocalAudios(sceneId));
 }
 
 export async function addAudio(
-  roomId: string,
+  sceneId: string,
   data: { name: string; sourceUrl: string; kind?: AudioKind },
 ): Promise<AudioItem> {
   const id = generateId();
-  const existing = await getAudios(roomId);
+  const existing = await getAudios(sceneId);
   const order = existing.length;
   const audio: AudioItem = {
     id,
-    roomId,
+    sceneId,
     name: data.name,
     sourceUrl: data.sourceUrl,
     createdAt: Date.now(),
@@ -482,13 +593,13 @@ export async function addAudio(
   };
   if (useFirestore()) {
     await setFirestoreAudio(audio);
-    const after = await getFirestoreAudios(roomId);
+    const after = await getFirestoreAudios(sceneId);
     if (!after.some((a) => a.id === id)) {
       throw new Error("Audio was not saved to the database. Please try again.");
     }
   } else if (useSupabaseStorage() && (await getSupabaseUserId())) {
     await setSupabaseAudio(audio);
-    const after = await getSupabaseAudios(roomId);
+    const after = await getSupabaseAudios(sceneId);
     if (!after.some((a) => a.id === id)) {
       throw new Error("Audio was not saved to the database. Please try again.");
     }
@@ -519,10 +630,10 @@ export async function removeAudio(audioId: string): Promise<void> {
 }
 
 export async function reorderAudios(
-  roomId: string,
+  sceneId: string,
   orderedIds: string[],
 ): Promise<void> {
-  const list = await getAudios(roomId);
+  const list = await getAudios(sceneId);
   const byId = new Map(list.map((a) => [a.id, a]));
   for (let index = 0; index < orderedIds.length; index++) {
     const id = orderedIds[index];
@@ -532,16 +643,16 @@ export async function reorderAudios(
   }
 }
 
-export async function reorderRooms(
+export async function reorderScenes(
   userId: string,
   orderedIds: string[],
 ): Promise<void> {
-  const list = await getRooms(userId);
+  const list = await getScenes(userId);
   const byId = new Map(list.map((r) => [r.id, r]));
   for (let index = 0; index < orderedIds.length; index++) {
     const id = orderedIds[index];
-    const room = byId.get(id);
-    if (!room || room.order === index) continue;
-    await updateRoom({ ...room, order: index });
+    const scene = byId.get(id);
+    if (!scene || scene.order === index) continue;
+    await updateScene({ ...scene, order: index });
   }
 }

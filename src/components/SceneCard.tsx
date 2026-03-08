@@ -2,7 +2,7 @@
 
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import Link from "next/link";
-import type { Room } from "@/lib/types";
+import type { Scene } from "@/lib/types";
 import { Label } from "./Label";
 
 const TITLE_MAX_CHARS = 32;
@@ -13,23 +13,23 @@ function truncate(str: string, max: number) {
   return str.slice(0, max).trimEnd() + "…";
 }
 
-export function RoomCard({
-  room,
+export function SceneCard({
+  scene,
   onEdit,
 }: {
-  room: Room;
-  onEdit?: (room: Room) => void;
+  scene: Scene;
+  onEdit?: (scene: Scene) => void;
 }) {
   const isNarrow = useMediaQuery("(max-width: 2024px)");
-  const title = isNarrow ? truncate(room.title, TITLE_MAX_CHARS) : room.title;
+  const title = isNarrow ? truncate(scene.title, TITLE_MAX_CHARS) : scene.title;
   const description =
-    room.description && isNarrow
-      ? truncate(room.description, DESCRIPTION_MAX_CHARS)
-      : (room.description ?? null);
+    scene.description && isNarrow
+      ? truncate(scene.description, DESCRIPTION_MAX_CHARS)
+      : (scene.description ?? null);
 
   return (
     <Link
-      href={`/room/${room.id}`}
+      href={`/scene/${scene.id}`}
       className="relative h-[150px] block rounded-xl border border-border/50 bg-card/50 p-5 pr-12 transition hover:border-accent/50 hover:bg-card overflow-hidden"
     >
       {onEdit && (
@@ -38,11 +38,11 @@ export function RoomCard({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onEdit(room);
+            onEdit(scene);
           }}
           className="absolute right-3 top-3 rounded-lg p-1.5 text-muted hover:bg-border hover:text-foreground"
-          aria-label="Edit room"
-          title="Edit room"
+          aria-label="Edit scene"
+          title="Edit scene"
         >
           <svg
             className="h-4 w-4"
@@ -61,9 +61,9 @@ export function RoomCard({
       )}
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
       {description && <p className="mt-1 text-sm text-muted">{description}</p>}
-      {room.labels.length > 0 && (
+      {scene.labels.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {room.labels.map((label) => (
+          {scene.labels.map((label) => (
             <Label key={label.id} {...label} />
           ))}
         </div>

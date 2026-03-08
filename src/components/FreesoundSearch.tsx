@@ -10,11 +10,11 @@ import {
 import { addAudio } from "@/lib/storage";
 
 interface FreesoundSearchProps {
-  roomId: string;
+  sceneId: string;
   onAdded: () => void;
 }
 
-export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
+export function FreesoundSearch({ sceneId, onAdded }: FreesoundSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<FreesoundSound[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,10 +69,14 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
   const handleAdd = async (sound: FreesoundSound) => {
     const url = getPreviewUrl(sound.previews);
     if (!url) return;
+    // stop preview when adding to scene
+    previewAudioRef.current?.pause();
+    previewAudioRef.current = null;
+    setPlayingId(null);
     setAddingId(sound.id);
     setError(null);
     try {
-      await addAudio(roomId, {
+      await addAudio(sceneId, {
         name: sound.name,
         sourceUrl: url,
         kind: "freesound",
@@ -89,7 +93,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
     return (
       <details className="group rounded-lg border border-border bg-card/50">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground hover:bg-card/80 [&::-webkit-details-marker]:hidden">
-          <span>🎵 Search Freesound</span>
+          <span>🔍 Search Freesound</span>
           <svg
             className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180"
             fill="none"
@@ -139,7 +143,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
   return (
     <details className="group rounded-lg border border-border bg-card/50">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground hover:bg-card/80 [&::-webkit-details-marker]:hidden">
-        <span>🎵 Search Freesound</span>
+        <span>🔍 Search Freesound</span>
         {results.length > 0 && (
           <span className="text-xs font-normal text-muted">
             {results.length} result{results.length !== 1 ? "s" : ""}
@@ -239,7 +243,7 @@ export function FreesoundSearch({ roomId, onAdded }: FreesoundSearchProps) {
                       disabled={!previewUrl || isAdding}
                       className="rounded bg-accent px-3 py-2 text-sm font-medium text-background hover:bg-accent-hover disabled:opacity-50"
                     >
-                      {isAdding ? "Adding…" : "Add to room"}
+                      {isAdding ? "Adding…" : "Add to scene"}
                     </button>
                   </div>
                 </li>

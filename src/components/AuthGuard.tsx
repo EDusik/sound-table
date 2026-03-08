@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const LOGIN_PATH = "/login";
 
 /** Routes that require a logged-in user (logged out users are redirected to /login). */
-const PROTECTED_PATH_PREFIXES = ["/dashboard", "/create-room", "/room"];
+const PROTECTED_PATH_PREFIXES = ["/dashboard", "/scene"];
 
 function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PATH_PREFIXES.some((prefix) =>

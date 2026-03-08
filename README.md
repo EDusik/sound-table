@@ -24,7 +24,7 @@
   <img src="./github/images/SoundTable1.png" alt="SoundTable demo" width="720" />
 </p>
 
-## Room
+## Scene
 
 <p align="center">
   <img src="./github/images/SoundTable2.png" alt="SoundTable demo" width="720" />
@@ -65,7 +65,7 @@ For Google login and cloud data:
    https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback
    ```
    (replace `YOUR_PROJECT_REF` with your Supabase project ref.)
-5. Create the database tables: in Supabase **SQL Editor**, run the contents of `supabase/migrations/20250305000000_rooms_audios.sql` (or use `supabase db push` if you have the CLI).
+5. Create the database tables: in Supabase **SQL Editor**, run the migrations in `supabase/migrations/` in order (or use `supabase db push` if you have the CLI).
 6. Run again:
    ```bash
    npm run dev
@@ -97,7 +97,7 @@ Copy `.env.example` to `.env` (or `.env.local`) and adjust as needed. **All are 
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_SUPABASE_URL`                 | Supabase project URL (e.g. `https://xxx.supabase.co`)                                                                  |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY`            | Supabase anonymous key (Authentication + DB)                                                                           |
-| `NEXT_PUBLIC_FREESOUND_API_KEY`            | Enables search on [Freesound](https://freesound.org) on the room page ([get token](https://freesound.org/apiv2/apply)) |
+| `NEXT_PUBLIC_FREESOUND_API_KEY`            | Enables search on [Freesound](https://freesound.org) on the scene page ([get token](https://freesound.org/apiv2/apply)) |
 | `NEXT_PUBLIC_FIREBASE_API_KEY`             | Firebase: API Key (optional)                                                                                           |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`         | Firebase: Auth Domain                                                                                                  |
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID`          | Firebase: Project ID                                                                                                   |
@@ -132,9 +132,9 @@ Copy `.env.example` to `.env` (or `.env.local`) and adjust as needed. **All are 
 ## ✨ Features
 
 - **Authentication** — Google login (Supabase) or demo mode with local storage.
-- **Dashboard** — List of rooms with title, description and colored tags; reorder by drag; edit and delete.
-- **Create room** — Title, description and tags with color picker.
-- **Room page** (`/room/[id]`) — Audio list with search; play/pause/stop, volume and loop per item; add by URL or (with API key) Freesound search; YouTube support.
+- **Dashboard** — List of scenes with title, description and colored tags; reorder by drag; edit and delete.
+- **Create scene** — Title, description and tags with color picker.
+- **Scene page** (`/scene/[id]`) — Audio list with search; play/pause/stop, volume and loop per item; add by URL or (with API key) Freesound search; YouTube support.
 - **Global audio bar** — Fixed bar at the bottom when any audio is playing; pause/stop control from any page.
 - **Storage** — localStorage (default), Supabase (PostgreSQL) or Firestore (optional).
 
@@ -165,9 +165,8 @@ The app stores only **metadata** (name + URL). You can use:
 src/
 ├── app/              # Routes (App Router)
 │   ├── login/        # Login screen
-│   ├── dashboard/    # Room list
-│   ├── create-room/  # Create new room
-│   └── room/[id]/    # Room page (audio)
+│   ├── dashboard/    # Scene list (create scene via modal)
+│   └── scene/[id]/   # Scene page (audio)
 ├── components/       # Reusable components
 ├── contexts/         # AuthContext
 ├── lib/              # Supabase, Firebase, storage, types

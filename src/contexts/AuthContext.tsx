@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         const stored =
           typeof window !== "undefined" &&
-          localStorage.getItem("audio_rooms_demo") === "1";
+          localStorage.getItem("audio_scenes_demo") === "1";
         queueMicrotask(() => {
           setUser(stored ? getDemoUser() : null);
           setLoading(false);
@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         const stored =
           typeof window !== "undefined" &&
-          localStorage.getItem("audio_rooms_demo") === "1";
+          localStorage.getItem("audio_scenes_demo") === "1";
         setUser(stored ? getDemoUser() : null);
       }
       setLoading(false);
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         const stored =
           typeof window !== "undefined" &&
-          localStorage.getItem("audio_rooms_demo") === "1";
+          localStorage.getItem("audio_scenes_demo") === "1";
         setUser(stored ? getDemoUser() : null);
       }
       setLoading(false);
@@ -138,14 +138,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInDemo = () => {
     if (typeof window !== "undefined")
-      localStorage.setItem("audio_rooms_demo", "1");
+      localStorage.setItem("audio_scenes_demo", "1");
     setUser(getDemoUser());
   };
 
   const signOut = async () => {
     if (supabase) await supabase.auth.signOut();
     if (typeof window !== "undefined")
-      localStorage.removeItem("audio_rooms_demo");
+      localStorage.removeItem("audio_scenes_demo");
     setUser(null);
   };
 

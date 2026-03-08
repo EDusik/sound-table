@@ -4,7 +4,7 @@ export interface Label {
   color: string;
 }
 
-export interface Room {
+export interface Scene {
   id: string;
   title: string;
   description: string;
@@ -19,7 +19,7 @@ export type AudioKind = "file" | "freesound" | "youtube";
 
 export interface AudioItem {
   id: string;
-  roomId: string;
+  sceneId: string;
   name: string;
   sourceUrl: string;
   createdAt: number;
@@ -34,12 +34,16 @@ export type PlaybackState = "idle" | "playing" | "paused" | "stopped";
 export interface YouTubeControl {
   pause: () => void;
   stop: () => void;
+  /** Volume 0–1. */
+  setVolume?: (v: number) => void;
+  /** Seek to position in seconds. */
+  seekTo?: (seconds: number) => void;
 }
 
 export interface ActivePlayer {
   id: string;
   audioId: string;
-  roomId: string;
+  sceneId: string;
   name: string;
   sourceUrl: string;
   state: PlaybackState;
@@ -48,4 +52,8 @@ export interface ActivePlayer {
   ref: HTMLAudioElement | null;
   /** For YouTube players; used by the bottom bar to pause/stop. */
   youtubeControl?: YouTubeControl | null;
+  /** Current playback position in seconds (for bottom bar display). */
+  currentTime?: number;
+  /** Total duration in seconds (for bottom bar display). */
+  duration?: number;
 }

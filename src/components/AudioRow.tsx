@@ -6,7 +6,7 @@ import { useAudioStore } from "@/store/audioStore";
 
 interface AudioRowProps {
   audio: AudioItem;
-  roomId: string;
+  sceneId: string;
   isInactive?: boolean;
   onToggleActive?: (audio: AudioItem) => void;
   onDelete?: (audio: AudioItem) => void;
@@ -46,7 +46,7 @@ function loadYouTubeIframeAPI(): Promise<unknown> {
 
 function YouTubeAudioRow({
   audio,
-  roomId,
+  sceneId,
   isInactive = false,
   onToggleActive,
   onDelete,
@@ -64,10 +64,14 @@ function YouTubeAudioRow({
     playVideo: () => void;
     pauseVideo: () => void;
     stopVideo: () => void;
+    seekTo: (seconds: number, allowSeekAhead: boolean) => void;
     setVolume: (v: number) => void;
+    getDuration: () => number;
+    getCurrentTime: () => number;
     destroy: () => void;
   } | null>(null);
   const loopRef = useRef(false);
+  const timeCheckInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [loop, setLoop] = useState(false);
@@ -80,13 +84,13 @@ function YouTubeAudioRow({
     register({
       id: audio.id,
       audioId: audio.id,
-      roomId,
+      sceneId,
       name: audio.name,
       sourceUrl: watchUrl,
       youtubeControl: null,
     });
     return () => unregister(audio.id);
-  }, [audio.id, audio.name, roomId, watchUrl, register, unregister]);
+  }, [audio.id, audio.name, sceneId, watchUrl, register, unregister]);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,7 +104,10 @@ function YouTubeAudioRow({
           playVideo: () => void;
           pauseVideo: () => void;
           stopVideo: () => void;
+          seekTo: (seconds: number, allowSeekAhead: boolean) => void;
           setVolume: (v: number) => void;
+          getDuration: () => number;
+          getCurrentTime: () => number;
           destroy: () => void;
         };
         PlayerState?: { PLAYING: number; PAUSED: number; ENDED: number };
@@ -113,15 +120,38 @@ function YouTubeAudioRow({
           onStateChange: (e: { data: number }) => {
             if (!YT?.PlayerState) return;
             switch (e.data) {
-              case YT.PlayerState.PLAYING:
+              case YT.PlayerState.PLAYING: {
+                if (timeCheckInterval.current !== null) {
+                  clearInterval(timeCheckInterval.current);
+                  timeCheckInterval.current = null;
+                }
                 setIsPlaying(true);
                 setState(audio.id, "playing");
+                const player = playerRef.current;
+                if (player) {
+                  timeCheckInterval.current = setInterval(() => {
+                    const ct = player.getCurrentTime();
+                    const d = player.getDuration();
+                    if (Number.isFinite(ct) && Number.isFinite(d) && d > 0) {
+                      useAudioStore.getState().setTime(audio.id, ct, d);
+                    }
+                  }, 500);
+                }
                 break;
+              }
               case YT.PlayerState.PAUSED:
+                if (timeCheckInterval.current !== null) {
+                  clearInterval(timeCheckInterval.current);
+                  timeCheckInterval.current = null;
+                }
                 setIsPlaying(false);
                 setState(audio.id, "paused");
                 break;
               case YT.PlayerState.ENDED:
+                if (timeCheckInterval.current !== null) {
+                  clearInterval(timeCheckInterval.current);
+                  timeCheckInterval.current = null;
+                }
                 setIsPlaying(false);
                 setState(audio.id, "stopped");
                 if (loopRef.current && playerRef.current) {
@@ -142,6 +172,14 @@ function YouTubeAudioRow({
             setIsPlaying(false);
             setState(audio.id, "stopped");
           },
+          setVolume: (v: number) => {
+            setVolume(v);
+            playerRef.current?.setVolume(Math.round(v * 100));
+            useAudioStore.getState().setVolume(audio.id, v);
+          },
+          seekTo: (seconds: number) => {
+            playerRef.current?.seekTo(seconds, true);
+          },
         });
       }
     });
@@ -161,6 +199,10 @@ function YouTubeAudioRow({
 
   const handlePlay = () => {
     if (isInactive || !playerRef.current) return;
+    playerRef.current.seekTo(0, true);
+    setVolume(1);
+    playerRef.current.setVolume(100);
+    useAudioStore.getState().setVolume(audio.id, 1);
     playerRef.current.playVideo();
   };
 
@@ -171,6 +213,10 @@ function YouTubeAudioRow({
 
   const handleStop = () => {
     if (isInactive || !playerRef.current) return;
+    if (timeCheckInterval.current !== null) {
+      clearInterval(timeCheckInterval.current);
+      timeCheckInterval.current = null;
+    }
     playerRef.current.stopVideo();
     setIsPlaying(false);
   };
@@ -229,10 +275,10 @@ function YouTubeAudioRow({
               <button
                 type="button"
                 onClick={handlePlay}
-                className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-background hover:bg-accent-hover"
                 title="Play"
               >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </button>
@@ -240,10 +286,10 @@ function YouTubeAudioRow({
               <button
                 type="button"
                 onClick={handlePause}
-                className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-background hover:bg-accent-hover"
                 title="Pause"
               >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                 </svg>
               </button>
@@ -251,10 +297,10 @@ function YouTubeAudioRow({
             <button
               type="button"
               onClick={handleStop}
-              className="rounded-lg bg-border p-2 text-foreground hover:bg-border/80"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-border text-foreground hover:bg-border/80"
               title="Stop"
             >
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                 <rect x="6" y="6" width="12" height="12" />
               </svg>
             </button>
@@ -262,25 +308,33 @@ function YouTubeAudioRow({
               type="button"
               onClick={handleLoop}
               title={loop ? "Loop on" : "Loop off"}
-              className={`rounded p-1.5 text-xs ${
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
                 loop
-                  ? "bg-accent-soft/50 text-accent"
-                  : "text-muted hover:bg-border"
+                  ? "bg-accent text-foreground hover:bg-accent-hover"
+                  : "bg-border text-foreground hover:bg-border/80"
               }`}
+              aria-pressed={loop}
             >
-              Loop
+              <svg
+                className="h-4 w-4"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
+              </svg>
             </button>
           </div>
           {onDelete ? (
             <button
               type="button"
               onClick={() => onDelete(audio)}
-              className="rounded-lg p-2 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300"
               title="Delete sound"
               aria-label="Delete sound"
             >
               <svg
-                className="h-5 w-5"
+                className="h-4 w-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -319,7 +373,7 @@ function YouTubeAudioRow({
 
 function HtmlAudioRow({
   audio,
-  roomId,
+  sceneId,
   isInactive = false,
   onToggleActive,
   onDelete,
@@ -331,18 +385,19 @@ function HtmlAudioRow({
   const setRef = useAudioStore((s) => s.setRef);
   const setVolume = useAudioStore((s) => s.setVolume);
   const setLoop = useAudioStore((s) => s.setLoop);
+  const setTime = useAudioStore((s) => s.setTime);
   const player = useAudioStore((s) => s.players.get(audio.id));
 
   useEffect(() => {
     register({
       id: audio.id,
       audioId: audio.id,
-      roomId,
+      sceneId,
       name: audio.name,
       sourceUrl: audio.sourceUrl,
     });
     return () => unregister(audio.id);
-  }, [audio.id, audio.name, audio.sourceUrl, roomId, register, unregister]);
+  }, [audio.id, audio.name, audio.sourceUrl, sceneId, register, unregister]);
 
   useEffect(() => {
     const el = ref.current;
@@ -350,19 +405,37 @@ function HtmlAudioRow({
     const onEnded = () => setState(audio.id, "stopped");
     const onPlay = () => setState(audio.id, "playing");
     const onPause = () => setState(audio.id, "paused");
+    const syncTime = () => {
+      const d = el.duration;
+      const t = el.currentTime;
+      if (Number.isFinite(d) && d >= 0 && Number.isFinite(t)) {
+        useAudioStore.getState().setTime(audio.id, t, d);
+      }
+    };
+    const onDurationChange = () => syncTime();
+    const onTimeUpdate = () => syncTime();
     el.addEventListener("ended", onEnded);
     el.addEventListener("play", onPlay);
     el.addEventListener("pause", onPause);
+    el.addEventListener("durationchange", onDurationChange);
+    el.addEventListener("timeupdate", onTimeUpdate);
     return () => {
       el.removeEventListener("ended", onEnded);
       el.removeEventListener("play", onPlay);
       el.removeEventListener("pause", onPause);
+      el.removeEventListener("durationchange", onDurationChange);
+      el.removeEventListener("timeupdate", onTimeUpdate);
     };
-  }, [audio.id, setState]);
+  }, [audio.id, setState, setTime]);
 
   const handlePlay = () => {
     if (isInactive) return;
-    ref.current?.play();
+    const el = ref.current;
+    if (!el) return;
+    el.currentTime = 0;
+    el.volume = 1;
+    useAudioStore.getState().setVolume(audio.id, 1);
+    el.play();
   };
   const handlePause = () => {
     if (isInactive) return;
@@ -424,7 +497,14 @@ function HtmlAudioRow({
           aria-hidden={isInactive}
         >
           <p className="truncate font-medium text-foreground">{audio.name}</p>
-          <p className="truncate text-xs text-muted">{audio.sourceUrl}</p>
+          <a
+            href={audio.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="truncate block text-xs text-accent hover:underline"
+          >
+            {audio.name}
+          </a>
         </div>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
@@ -436,10 +516,10 @@ function HtmlAudioRow({
               <button
                 type="button"
                 onClick={handlePlay}
-                className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-background hover:bg-accent-hover"
                 title="Play"
               >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </button>
@@ -447,10 +527,10 @@ function HtmlAudioRow({
               <button
                 type="button"
                 onClick={handlePause}
-                className="rounded-lg bg-accent p-2 text-background hover:bg-accent-hover"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-background hover:bg-accent-hover"
                 title="Pause"
               >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                 </svg>
               </button>
@@ -458,10 +538,10 @@ function HtmlAudioRow({
             <button
               type="button"
               onClick={handleStop}
-              className="rounded-lg bg-border p-2 text-foreground hover:bg-border/80"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-border text-foreground hover:bg-border/80"
               title="Stop"
             >
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                 <rect x="6" y="6" width="12" height="12" />
               </svg>
             </button>
@@ -469,21 +549,33 @@ function HtmlAudioRow({
               type="button"
               onClick={handleLoop}
               title={player?.loop ? "Loop on" : "Loop off"}
-              className={`rounded p-1.5 text-xs ${player?.loop ? "bg-accent-soft/50 text-accent" : "text-muted hover:bg-border"}`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                player?.loop
+                  ? "bg-accent text-foreground hover:bg-accent-hover"
+                  : "bg-border text-foreground hover:bg-border/80"
+              }`}
+              aria-pressed={player?.loop}
             >
-              Loop
+              <svg
+                className="h-4 w-4"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
+              </svg>
             </button>
           </div>
           {onDelete ? (
             <button
               type="button"
               onClick={() => onDelete(audio)}
-              className="rounded-lg p-2 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300"
               title="Delete sound"
               aria-label="Delete sound"
             >
               <svg
-                className="h-5 w-5"
+                className="h-4 w-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

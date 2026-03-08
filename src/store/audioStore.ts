@@ -6,7 +6,7 @@ interface AudioStore {
   register: (payload: {
     id: string;
     audioId: string;
-    roomId: string;
+    sceneId: string;
     name: string;
     sourceUrl: string;
     ref?: HTMLAudioElement | null;
@@ -18,6 +18,7 @@ interface AudioStore {
   setYoutubeControl: (id: string, control: YouTubeControl | null) => void;
   setVolume: (id: string, volume: number) => void;
   setLoop: (id: string, loop: boolean) => void;
+  setTime: (id: string, currentTime: number, duration: number) => void;
   getPlayingCount: () => number;
   getPlayingList: () => ActivePlayer[];
   stopAll: () => void;
@@ -32,7 +33,7 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
       next.set(payload.id, {
         id: payload.id,
         audioId: payload.audioId,
-        roomId: payload.roomId,
+        sceneId: payload.sceneId,
         name: payload.name,
         sourceUrl: payload.sourceUrl,
         state: "idle",
@@ -96,6 +97,16 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
       if (!p) return s;
       const next = new Map(s.players);
       next.set(id, { ...p, loop });
+      return { players: next };
+    });
+  },
+
+  setTime: (id, currentTime, duration) => {
+    set((s) => {
+      const p = s.players.get(id);
+      if (!p) return s;
+      const next = new Map(s.players);
+      next.set(id, { ...p, currentTime, duration });
       return { players: next };
     });
   },
