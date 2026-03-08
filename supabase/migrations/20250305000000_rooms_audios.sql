@@ -1,4 +1,4 @@
--- Rooms: salas do usuário
+-- Rooms: user rooms
 create table if not exists public.rooms (
   id text primary key,
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -9,7 +9,7 @@ create table if not exists public.rooms (
   "order" int
 );
 
--- Audios: áudios por sala
+-- Audios: audio items per room
 create table if not exists public.audios (
   id text primary key,
   room_id text not null references public.rooms(id) on delete cascade,
@@ -32,7 +32,7 @@ create policy "Users can manage own rooms"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
--- RLS: usuário só acessa audios de salas que possui
+-- RLS: user can only access audios from rooms they own
 create policy "Users can manage audios of own rooms"
   on public.audios for all
   using (
