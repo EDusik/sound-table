@@ -18,18 +18,6 @@
   <img src="https://img.shields.io/badge/Zustand-5-764ABC?style=flat-square" alt="Zustand" />
 </p>
 
-### Dashboard
-
-<p align="center">
-  <img src="./github/images/SoundTable1.png" alt="SoundTable demo" width="720" />
-</p>
-
-## Scene
-
-<p align="center">
-  <img src="./github/images/SoundTable2.png" alt="SoundTable demo" width="720" />
-</p>
-
 ---
 
 ## 🚀 Getting started
@@ -65,8 +53,9 @@ For Google login and cloud data:
    https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback
    ```
    (replace `YOUR_PROJECT_REF` with your Supabase project ref.)
-5. Create the database tables: in Supabase **SQL Editor**, run the migrations in `supabase/migrations/` in order (or use `supabase db push` if you have the CLI).
-6. Run again:
+5. Create the database and storage: in Supabase **SQL Editor**, either run the migrations in `supabase/migrations/` in order (or `supabase db push` if you use the CLI), or run the one-time script `supabase/scripts/run-in-supabase.sql` to create tables, RLS, and the `audios` storage bucket in one go.
+6. (Optional) For the app to create the `audios` bucket automatically if missing, add `SUPABASE_SERVICE_ROLE_KEY` to `.env` (Supabase Dashboard → Settings → API → service_role key). Otherwise ensure the bucket exists via migrations or the script above.
+7. Run again:
    ```bash
    npm run dev
    ```
@@ -93,19 +82,20 @@ The app already sends `redirectTo` with `window.location.origin`, so in producti
 
 Copy `.env.example` to `.env` (or `.env.local`) and adjust as needed. **All are optional** to run in “localStorage only” mode.
 
-| Variable                                   | Description                                                                                                            |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`                 | Supabase project URL (e.g. `https://xxx.supabase.co`)                                                                  |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY`            | Supabase anonymous key (Authentication + DB)                                                                           |
+| Variable                                   | Description                                                                                                             |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                 | Supabase project URL (e.g. `https://xxx.supabase.co`)                                                                   |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`            | Supabase anonymous key (Authentication + DB)                                                                            |
+| `SUPABASE_SERVICE_ROLE_KEY`                | Supabase service_role key (server-only). Used to create the `audios` storage bucket if missing (e.g. `POST /api/ensure-audios-bucket`). Optional if you create the bucket via SQL/migrations. |
 | `NEXT_PUBLIC_FREESOUND_API_KEY`            | Enables search on [Freesound](https://freesound.org) on the scene page ([get token](https://freesound.org/apiv2/apply)) |
-| `NEXT_PUBLIC_FIREBASE_API_KEY`             | Firebase: API Key (optional)                                                                                           |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`         | Firebase: Auth Domain                                                                                                  |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`          | Firebase: Project ID                                                                                                   |
-| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`      | Firebase: Storage Bucket                                                                                               |
-| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase: Messaging Sender ID                                                                                          |
-| `NEXT_PUBLIC_FIREBASE_APP_ID`              | Firebase: App ID                                                                                                       |
-| `NEXT_PUBLIC_USE_FIRESTORE`                | `"true"` to use Firestore instead of localStorage                                                                      |
-| `NEXT_PUBLIC_FREE_ACCESS`                  | `"false"` to disable access without login (default: allowed)                                                           |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`             | Firebase: API Key (optional)                                                                                            |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`         | Firebase: Auth Domain                                                                                                   |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`          | Firebase: Project ID                                                                                                    |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`      | Firebase: Storage Bucket                                                                                                |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase: Messaging Sender ID                                                                                           |
+| `NEXT_PUBLIC_FIREBASE_APP_ID`              | Firebase: App ID                                                                                                        |
+| `NEXT_PUBLIC_USE_FIRESTORE`                | `"true"` to use Firestore instead of localStorage                                                                       |
+| `NEXT_PUBLIC_FREE_ACCESS`                  | `"false"` to disable access without login (default: allowed)                                                            |
 
 ### Firebase / Firestore (optional)
 
@@ -144,7 +134,8 @@ The app stores only **metadata** (name + URL). You can use:
 
 - [Tabletop Audio](https://tabletopaudio.com) (ambiences)
 - [Freesound](https://freesound.org) (with account and direct links or search with API key)
-- Any direct URL to MP3 or supported audio file
+- **YouTube** — paste a watch URL to use the track as audio
+- Any direct URL to MP3, WAV or OGG (max 25 MB per file for uploads)
 
 ---
 
@@ -164,15 +155,19 @@ The app stores only **metadata** (name + URL). You can use:
 ```text
 src/
 ├── app/              # Routes (App Router)
-│   ├── login/        # Login screen
+│   ├── api/          # API routes (e.g. ensure-audios-bucket)
+│   ├── auth/         # Auth callback
+│   ├── login/        # Login and enroll/verify
 │   ├── dashboard/    # Scene list (create scene via modal)
-│   └── scene/[id]/   # Scene page (audio)
-├── components/       # Reusable components
-├── contexts/         # AuthContext
-├── lib/              # Supabase, Firebase, storage, types
-├── store/            # Zustand (audioStore)
-docs/
-└── images/           # Screenshots and banner (add here)
+│   └── scene/[id]/   # Scene page (audio list, player)
+├── components/       # Reusable UI components
+├── contexts/         # Auth, theme
+├── hooks/            # useFocusTrap, etc.
+├── lib/              # Supabase, Firebase, storage, types, schemas
+├── store/            # Zustand (audio player state)
+supabase/
+├── migrations/       # DB and storage migrations (run in order)
+└── scripts/         # One-time SQL (e.g. run-in-supabase.sql)
 ```
 
 ---
