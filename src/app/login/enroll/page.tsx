@@ -41,7 +41,7 @@ export default function LoginEnrollPage() {
         setEnrollLoading(false);
         setError(t("loginEnroll.failedStart"));
       });
-  }, []);
+  }, [t]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();

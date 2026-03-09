@@ -166,7 +166,7 @@ export default function ScenePage() {
         setRenameError(getErrorMessage(err, t("scene.failedRename")));
       }
     },
-    [updateAudioMutation],
+    [updateAudioMutation, t],
   );
 
   useEffect(() => {

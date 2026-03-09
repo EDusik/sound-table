@@ -14,7 +14,6 @@ import {
   type Translations,
   getInitialLocale,
   storeLocale,
-  DEFAULT_LOCALE,
 } from "@/lib/i18n";
 
 // Lazy-load translations to keep initial bundle smaller
@@ -41,21 +40,19 @@ function interpolate(text: string, params?: Record<string, string | number>): st
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+  const [locale, setLocaleState] = useState<Locale>(() => getInitialLocale());
   const [translations, setTranslations] = useState<Translations | null>(null);
   const [ready, setReady] = useState(false);
 
-  // Hydrate locale from localStorage on mount
+  // Load translations for initial locale on mount
   useEffect(() => {
-    const initial = getInitialLocale();
-    setLocaleState(initial);
-    localeModules[initial]()
+    localeModules[locale]()
       .then((m) => {
         setTranslations(m.default);
         setReady(true);
       })
       .catch(() => setReady(true));
-  }, []);
+  }, [locale]);
 
   // When locale changes, load new translations and persist
   const setLocale = useCallback((newLocale: Locale) => {
