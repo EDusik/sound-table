@@ -27,7 +27,13 @@ export function SearchBar({
 }: SearchBarProps) {
   if (open) {
     return (
-      <div className="flex w-full max-w-md flex-1 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 sm:min-w-[22rem] sm:w-96 sm:max-w-xl">
+      <div
+        className="flex w-full max-w-md flex-1 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 sm:min-w-[22rem] sm:w-96 sm:max-w-xl"
+        style={{
+          animation: "search-bar-in 0.35s cubic-bezier(0.33, 1, 0.68, 1)",
+          transformOrigin: "right",
+        }}
+      >
         <SearchIcon className="h-4 w-4 shrink-0 text-muted" />
         <input
           type="search"

@@ -22,6 +22,7 @@ import { IconButton } from "@/components/IconButton";
 import { useAudioStore } from "@/store/audioStore";
 import { getErrorMessage } from "@/lib/errors";
 import { ErrorMessage } from "@/components/ErrorMessage";
+import { useFocusEntryOnce } from "@/hooks/useFocusEntryOnce";
 
 export default function ScenePage() {
   const params = useParams();
@@ -41,6 +42,7 @@ export default function ScenePage() {
   const [inactiveAudioIds, setInactiveAudioIds] = useState<string[]>([]);
   const [showAddSoundModal, setShowAddSoundModal] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const showFocusEntry = useFocusEntryOnce("scene");
 
   useEffect(() => {
     if (!sceneId) {
@@ -270,6 +272,7 @@ export default function ScenePage() {
               onClick={() => setShowAddSoundModal(true)}
               aria-label="Add sound"
               variant="primary"
+              className={showFocusEntry ? "animate-focus-on-entry" : ""}
             >
               +
             </IconButton>

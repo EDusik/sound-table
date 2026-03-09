@@ -18,6 +18,7 @@ import { IconButton } from "@/components/IconButton";
 import { LABEL_DEFAULT_COLORS } from "@/components/LabelEditor";
 import { validateSceneForm } from "@/lib/sceneSchema";
 import { getErrorMessage } from "@/lib/errors";
+import { useFocusEntryOnce } from "@/hooks/useFocusEntryOnce";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -50,6 +51,7 @@ export default function DashboardPage() {
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [createFieldErrors, setCreateFieldErrors] = useState<Record<string, string>>({});
+  const showFocusEntry = useFocusEntryOnce("dashboard");
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -362,6 +364,7 @@ export default function DashboardPage() {
                   onClick={openCreateModal}
                   aria-label="New scene"
                   variant="primary"
+                  className={showFocusEntry ? "animate-focus-on-entry" : ""}
                 >
                   +
                 </IconButton>

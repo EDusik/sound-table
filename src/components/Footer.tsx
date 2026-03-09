@@ -1,9 +1,15 @@
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-(--foreground)/10 py-6">
+    <footer className="mt-auto border-t border-(--foreground)/10 py-4">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 text-center text-sm text-(--foreground)/70">
-        <span className="hidden sm:inline">If you enjoy <span className="font-cinzel font-bold tracking-wide">SoundTable</span>, consider supporting the project</span>
-        <span className="hidden sm:inline text-(--foreground)/40">·</span>
+        <span className="sm:inline">
+          If you enjoy{" "}
+          <span className="font-cinzel font-bold tracking-wide">
+            SoundTable
+          </span>
+          , consider supporting the project
+        </span>
+        <span className="sm:inline text-(--foreground)/40">·</span>
         <a
           href={`${process.env.PIX_ID}`}
           target="_blank"

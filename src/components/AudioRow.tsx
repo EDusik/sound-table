@@ -10,6 +10,8 @@ interface AudioRowProps {
   isInactive?: boolean;
   onToggleActive?: (audio: AudioItem) => void;
   onDelete?: (audio: AudioItem) => void;
+  /** Optional class for the root card (e.g. rounded-tr-lg rounded-bl-lg when next to drag handle). */
+  className?: string;
 }
 
 let youtubeApiPromise: Promise<unknown> | null = null;
@@ -50,6 +52,7 @@ function YouTubeAudioRow({
   isInactive = false,
   onToggleActive,
   onDelete,
+  className,
 }: AudioRowProps) {
   const videoId = audio.sourceUrl;
   const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
@@ -237,12 +240,12 @@ function YouTubeAudioRow({
 
   return (
     <div
-      className={`flex flex-col gap-2 rounded-lg border bg-card/50 p-4 sm:flex-row sm:items-start sm:gap-4 ${
+      className={`flex flex-col gap-2 rounded-lg border bg-card/50 px-4 py-2 sm:flex-row sm:items-center sm:gap-4 ${
         isPlaying ? "border-2 border-accent" : "border-border/50"
-      }`}
+      } ${className ?? ""}`}
     >
-      <div className="flex items-start gap-3 sm:flex-1">
-        <label className="mt-1 flex items-center">
+      <div className="flex items-center gap-3 sm:flex-1">
+        <label className="flex items-center">
           <input
             type="checkbox"
             checked={!isInactive}
@@ -255,14 +258,13 @@ function YouTubeAudioRow({
           className={`min-w-0 flex-1 ${isInactive ? "opacity-40" : ""}`}
           aria-hidden={isInactive}
         >
-          <p className="truncate font-medium text-foreground">{audio.name}</p>
           <a
             href={watchUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="break-all text-xs text-accent hover:underline"
+            className="truncate block font-medium text-accent hover:underline"
           >
-            {watchUrl}
+            {audio.name}
           </a>
         </div>
       </div>
@@ -360,7 +362,7 @@ function YouTubeAudioRow({
             step="0.05"
             value={volume}
             onChange={handleVolume}
-            className="w-20 flex-1 min-w-0 sm:flex-initial accent-accent"
+            className="w-20 flex-1 min-w-0 sm:flex-initial accent-accent border-0 outline-none"
           />
         </label>
       </div>
@@ -377,6 +379,7 @@ function HtmlAudioRow({
   isInactive = false,
   onToggleActive,
   onDelete,
+  className,
 }: AudioRowProps) {
   const ref = useRef<HTMLAudioElement | null>(null);
   const register = useAudioStore((s) => s.register);
@@ -468,9 +471,9 @@ function HtmlAudioRow({
 
   return (
     <div
-      className={`flex flex-col gap-2 rounded-lg border bg-card/50 p-4 sm:flex-row sm:items-center sm:gap-4 ${
+      className={`flex flex-col gap-2 rounded-lg border bg-card/50 px-4 py-2 sm:flex-row sm:items-center sm:gap-4 ${
         isPlaying ? "border-2 border-accent" : "border-border/50"
-      }`}
+      } ${className ?? ""}`}
     >
       <audio
         ref={(el) => {
@@ -482,8 +485,8 @@ function HtmlAudioRow({
         loop={player?.loop ?? false}
         className="hidden"
       />
-      <div className="flex items-start gap-3 sm:flex-1">
-        <label className="mt-1 flex items-center">
+      <div className="flex items-center gap-3 sm:flex-1">
+        <label className="flex items-center">
           <input
             type="checkbox"
             checked={!isInactive}
@@ -496,12 +499,11 @@ function HtmlAudioRow({
           className={`min-w-0 flex-1 ${isInactive ? "opacity-40" : ""}`}
           aria-hidden={isInactive}
         >
-          <p className="truncate font-medium text-foreground">{audio.name}</p>
           <a
             href={audio.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="truncate block text-xs text-accent hover:underline"
+            className="truncate block font-medium text-accent hover:underline"
           >
             {audio.name}
           </a>
@@ -601,7 +603,7 @@ function HtmlAudioRow({
             step="0.05"
             value={volume}
             onChange={handleVolume}
-            className="w-20 flex-1 min-w-0 sm:flex-initial accent-accent"
+            className="w-20 flex-1 min-w-0 sm:flex-initial accent-accent border-0 outline-none"
           />
         </label>
       </div>

@@ -43,7 +43,7 @@ export function ScenesBlock({
           onDragOver={onDragOver}
           onDrop={(e) => onDrop(e, getToIndexInFullList(index))}
           onDragEnd={onDragEnd}
-          className={`flex items-stretch gap-2 rounded-xl transition-opacity ${
+          className={`flex items-stretch rounded-xl transition-opacity ${
             draggedId === scene.id ? "opacity-50" : ""
           } ${reordering ? "pointer-events-none" : ""}`}
         >

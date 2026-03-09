@@ -58,7 +58,7 @@ export function AudiosBlock({
               onDrop(e, filteredAudios.findIndex((a) => a.id === audio.id))
             }
             onDragEnd={onDragEnd}
-            className={`flex items-stretch gap-2 rounded-lg transition-opacity ${
+            className={`flex items-stretch rounded-lg transition-opacity ${
               draggedId === audio.id ? "opacity-50" : ""
             } ${reordering ? "pointer-events-none" : ""}`}
           >
@@ -74,6 +74,7 @@ export function AudiosBlock({
                 isInactive={false}
                 onToggleActive={onToggleActive}
                 onDelete={onDelete}
+                className="rounded-tr-lg rounded-br-lg rounded-tl-none rounded-bl-none"
               />
             </div>
           </li>
@@ -88,7 +89,7 @@ export function AudiosBlock({
             {inactiveAudios.map((audio) => (
               <li
                 key={audio.id}
-                className="flex items-stretch gap-2 rounded-lg"
+                className="flex items-stretch rounded-lg"
               >
                 <div className="min-w-0 flex-1">
                   <AudioRow
