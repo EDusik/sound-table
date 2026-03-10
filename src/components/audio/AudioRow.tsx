@@ -284,6 +284,7 @@ function YouTubeAudioRow({
 
   return (
     <div
+      ref={rowRef}
       className={`flex flex-col gap-2 rounded-lg border bg-card/50 px-4 py-2 sm:flex-row sm:items-center sm:gap-4 ${
         isPlaying ? "border-2 border-accent" : "border-border/50"
       } ${className ?? ""}`}
