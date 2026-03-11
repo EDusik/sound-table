@@ -171,7 +171,7 @@
 
   "freesound.title": "🔍 Buscar no Freesound",
   "freesound.notConfiguredPrefix": "Adicione ",
-  "freesound.notConfiguredCode": "FREESOUND_API_KEY",
+  "freesound.notConfiguredCode": "NEXT_PUBLIC_FREESOUND_API_KEY",
   "freesound.notConfiguredMiddle": " para buscar e adicionar sons do ",
   "freesound.notConfiguredSuffix": ". Obtenha um token em ",
   "freesound.queryHelp": "Consulta: Termos ou tags (ex.: rpg, fantasy, ambience) - a busca considera tags, nome e descrição. Use -termo para excluir. Filtro (opcional): Digite tags como palavras (ex.: fantasy rpg ambience);",

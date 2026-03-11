@@ -2,7 +2,7 @@
  * Freesound API v2 client (search + previews).
  * Search is proxied via /api/freesound-search so the API key stays server-side.
  * @see https://freesound.org/docs/api/
- * Token: https://freesound.org/apiv2/apply → set FREESOUND_API_KEY in .env
+ * Token: https://freesound.org/apiv2/apply → set NEXT_PUBLIC_FREESOUND_API_KEY in .env
  */
 
 export interface FreesoundPreviews {
@@ -58,7 +58,8 @@ export async function searchFreesound(
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(
-      (body as { error?: string }).error ?? `Freesound API error: ${res.status}`,
+      (body as { error?: string }).error ??
+        `Freesound API error: ${res.status}`,
     );
   }
   return res.json() as Promise<FreesoundSearchResponse>;

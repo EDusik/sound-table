@@ -79,22 +79,22 @@ The app sends `redirectTo` with `window.location.origin`, so production must hav
 
 Copy `.env.example` to `.env` (or `.env.local`) and adjust. **All variables are optional** to run in “localStorage only” mode.
 
-| Variable | Description |
-| -------- | ----------- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (e.g. `https://xxx.supabase.co`). |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key (Auth + DB). |
-| `SUPABASE_SERVICE_ROLE_KEY` | **(Server-only.)** Used to create the `audios` storage bucket if missing (`POST /api/ensure-audios-bucket`). Optional if the bucket is created via SQL/migrations. |
-| `NEXT_PUBLIC_FREESOUND_API_KEY` | Freesound API token. Enables Freesound search on the scene page and is read by server routes such as `/api/freesound-search` and `/api/freesound-configured`. [Get a token](https://freesound.org/apiv2/apply). |
-| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase: API Key (optional). |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase: Auth Domain. |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase: Project ID. |
-| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase: Storage Bucket. |
-| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase: Messaging Sender ID. |
-| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase: App ID. |
-| `NEXT_PUBLIC_USE_FIRESTORE` | `"true"` to use Firestore instead of localStorage. |
-| `NEXT_PUBLIC_PIX_ID` | PIX key for the **Support** page (`/support`): shown for copy and in the “Pay with Pix” section. |
-| `NEXT_PUBLIC_PIX_URL` | Optional: URL for Pix payment (e.g. Nubank “cobrar” link). Used by the QR code and “Pay with Pix” on the support page. |
-| `NEXT_PUBLIC_STRIPE_URL` | Stripe (or other) donation link for the Support page. |
+| Variable                                   | Description                                                                                                                                                                                                     |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                 | Supabase project URL (e.g. `https://xxx.supabase.co`).                                                                                                                                                          |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`            | Supabase anonymous key (Auth + DB).                                                                                                                                                                             |
+| `SUPABASE_SERVICE_ROLE_KEY`                | **(Server-only.)** Used to create the `audios` storage bucket if missing (`POST /api/ensure-audios-bucket`). Optional if the bucket is created via SQL/migrations.                                              |
+| `NEXT_PUBLIC_FREESOUND_API_KEY`            | Freesound API token. Enables Freesound search on the scene page and is read by server routes such as `/api/freesound-search` and `/api/freesound-configured`. [Get a token](https://freesound.org/apiv2/apply). |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`             | Firebase: API Key (optional).                                                                                                                                                                                   |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`         | Firebase: Auth Domain.                                                                                                                                                                                          |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`          | Firebase: Project ID.                                                                                                                                                                                           |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`      | Firebase: Storage Bucket.                                                                                                                                                                                       |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase: Messaging Sender ID.                                                                                                                                                                                  |
+| `NEXT_PUBLIC_FIREBASE_APP_ID`              | Firebase: App ID.                                                                                                                                                                                               |
+| `NEXT_PUBLIC_USE_FIRESTORE`                | `"true"` to use Firestore instead of localStorage.                                                                                                                                                              |
+| `NEXT_PUBLIC_PIX_ID`                       | PIX key for the **Support** page (`/support`): shown for copy and in the “Pay with Pix” section.                                                                                                                |
+| `NEXT_PUBLIC_PIX_URL`                      | Optional: URL for Pix payment (e.g. Nubank “cobrar” link). Used by the QR code and “Pay with Pix” on the support page.                                                                                          |
+| `NEXT_PUBLIC_STRIPE_URL`                   | Stripe (or other) donation link for the Support page.                                                                                                                                                           |
 
 ### Firebase / Firestore (optional)
 
@@ -107,15 +107,15 @@ Copy `.env.example` to `.env` (or `.env.local`) and adjust. **All variables are 
 
 ## 🛠 Tech stack
 
-| Layer | Technology |
-| ----- | ---------- |
-| **Framework** | [Next.js 16](https://nextjs.org) (App Router) |
-| **UI** | [React 19](https://react.dev), [Tailwind CSS 4](https://tailwindcss.com) |
-| **Language** | [TypeScript](https://www.typescriptlang.org) |
-| **Auth & DB** | [Supabase](https://supabase.com) (Auth + PostgreSQL); optional: [Firebase](https://firebase.google.com) Auth + Firestore |
-| **Data & API** | [TanStack Query](https://tanstack.com/query) (React Query) for server state; Zod for schemas |
-| **Global state (player)** | [Zustand](https://zustand-demo.pmnd.rs) |
-| **Backend** | Next.js API routes (server-only): `ensure-audios-bucket`, `freesound-search`, `freesound-configured`. No separate Node server. |
+| Layer                     | Technology                                                                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Framework**             | [Next.js 16](https://nextjs.org) (App Router)                                                                                  |
+| **UI**                    | [React 19](https://react.dev), [Tailwind CSS 4](https://tailwindcss.com)                                                       |
+| **Language**              | [TypeScript](https://www.typescriptlang.org)                                                                                   |
+| **Auth & DB**             | [Supabase](https://supabase.com) (Auth + PostgreSQL); optional: [Firebase](https://firebase.google.com) Auth + Firestore       |
+| **Data & API**            | [TanStack Query](https://tanstack.com/query) (React Query) for server state; Zod for schemas                                   |
+| **Global state (player)** | [Zustand](https://zustand-demo.pmnd.rs)                                                                                        |
+| **Backend**               | Next.js API routes (server-only): `ensure-audios-bucket`, `freesound-search`, `freesound-configured`. No separate Node server. |
 
 ---
 
@@ -124,7 +124,7 @@ Copy `.env.example` to `.env` (or `.env.local`) and adjust. **All variables are 
 - **Authentication** — Google login (Supabase) or continue with local storage (no account).
 - **i18n** — English and Portuguese (locale switch in the UI).
 - **Dashboard** — List of scenes with title, description and colored tags; reorder by drag; create, edit and delete scenes.
-- **Scene page** (`/scene/[id]`) — Audio list with search; play/pause/stop, volume and loop per item; add by URL, file upload (when signed in), or **Freesound search** (when `FREESOUND_API_KEY` is set); YouTube URL support.
+- **Scene page** (`/scene/[id]`) — Audio list with search; play/pause/stop, volume and loop per item; add by URL, file upload (when signed in), or **Freesound search** (when `NEXT_PUBLIC_FREESOUND_API_KEY` is set); YouTube URL support.
 - **Global audio bar** — Fixed bar at the bottom when any audio is playing; pause/stop from any page.
 - **Support page** (`/support`) — Optional donate/support page with PIX (key + QR) and Stripe link. Configure via `NEXT_PUBLIC_PIX_ID`, `NEXT_PUBLIC_PIX_URL`, and `NEXT_PUBLIC_STRIPE_URL`.
 - **Storage** — localStorage (default), Supabase (PostgreSQL + Storage), or Firestore (optional).
@@ -134,28 +134,28 @@ Copy `.env.example` to `.env` (or `.env.local`) and adjust. **All variables are 
 The app stores **metadata** (name + URL). Supported sources:
 
 - [Tabletop Audio](https://tabletopaudio.com) (ambiences)
-- [Freesound](https://freesound.org) — search (with `FREESOUND_API_KEY`) or paste direct links
+- [Freesound](https://freesound.org) — search (with `NEXT_PUBLIC_FREESOUND_API_KEY`) or paste direct links
 - **YouTube** — paste a watch URL to use the track as audio
 - Any direct URL to MP3, WAV or OGG; file upload (max 25 MB) when signed in with Supabase
 
 ### API routes (server)
 
-| Route | Method | Description |
-| ----- | ------ | ----------- |
-| `/api/ensure-audios-bucket` | POST | Creates the Supabase `audios` storage bucket and policies if missing. Requires `Authorization: Bearer <Supabase access_token>` and `SUPABASE_SERVICE_ROLE_KEY`. |
-| `/api/freesound-configured` | GET | Returns `{ configured: boolean }` depending on `NEXT_PUBLIC_FREESOUND_API_KEY`. Used by the client to show or hide Freesound search. |
-| `/api/freesound-search` | GET | Proxies search to Freesound API (query params: `query`, `page`, `pageSize`, `filter`) while keeping the token in `NEXT_PUBLIC_FREESOUND_API_KEY` on the server. |
+| Route                       | Method | Description                                                                                                                                                     |
+| --------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/ensure-audios-bucket` | POST   | Creates the Supabase `audios` storage bucket and policies if missing. Requires `Authorization: Bearer <Supabase access_token>` and `SUPABASE_SERVICE_ROLE_KEY`. |
+| `/api/freesound-configured` | GET    | Returns `{ configured: boolean }` depending on `NEXT_PUBLIC_FREESOUND_API_KEY`. Used by the client to show or hide Freesound search.                            |
+| `/api/freesound-search`     | GET    | Proxies search to Freesound API (query params: `query`, `page`, `pageSize`, `filter`) while keeping the token in `NEXT_PUBLIC_FREESOUND_API_KEY` on the server. |
 
 ---
 
 ## 📜 Scripts
 
-| Command | Description |
-| ------- | ----------- |
-| `npm run dev` | Development server at [http://localhost:3000](http://localhost:3000) |
-| `npm run build` | Production build |
-| `npm run start` | Run production build |
-| `npm run lint` | Run ESLint |
+| Command         | Description                                                          |
+| --------------- | -------------------------------------------------------------------- |
+| `npm run dev`   | Development server at [http://localhost:3000](http://localhost:3000) |
+| `npm run build` | Production build                                                     |
+| `npm run start` | Run production build                                                 |
+| `npm run lint`  | Run ESLint                                                           |
 
 ---
 
