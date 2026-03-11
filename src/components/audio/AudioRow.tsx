@@ -242,15 +242,6 @@ function YouTubeAudioRow({
     setIsPlaying(false);
   };
 
-  const handleVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isInactive) return;
-    const v = Number(e.target.value);
-    setVolume(v);
-    if (playerRef.current) {
-      playerRef.current.setVolume(v * 100);
-    }
-  };
-
   const handleLoop = () => {
     if (isInactive) return;
     setLoop((prev) => !prev);
@@ -442,12 +433,6 @@ function HtmlAudioRow({
     ref.current.pause();
     ref.current.currentTime = 0;
     setState(audio.id, "stopped");
-  };
-  const handleVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isInactive) return;
-    const v = Number(e.target.value);
-    if (ref.current) ref.current.volume = v;
-    setVolume(audio.id, v);
   };
   const handleLoop = () => {
     if (isInactive) return;

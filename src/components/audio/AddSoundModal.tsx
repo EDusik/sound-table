@@ -67,8 +67,6 @@ export function AddSoundModal({
     }
   }, [open]);
 
-  const hasYoutubeInUrl =
-    addUrl.trim() !== "" && !!extractYouTubeId(addUrl.trim());
   const hasFileInput = addFile !== null;
   const hasUrlOrFile = addUrl.trim() !== "" || hasFileInput;
   const hasSpotifyUrl = spotifyUrl.trim() !== "";

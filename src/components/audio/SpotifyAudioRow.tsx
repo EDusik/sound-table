@@ -20,7 +20,7 @@ interface SpotifyAudioRowProps {
 
 export function SpotifyAudioRow({
   track,
-  sceneId,
+  sceneId, // eslint-disable-line @typescript-eslint/no-unused-vars -- reserved for future use
   isInactive = false,
   onToggleActive,
   onRemove,
@@ -32,10 +32,6 @@ export function SpotifyAudioRow({
   const [editNameValue, setEditNameValue] = useState(track.name);
 
   const sourceUrl = spotifyUriToOpenUrl(track.spotifyUri);
-
-  useEffect(() => {
-    setEditNameValue(track.name);
-  }, [track.name]);
 
   const saveRename = () => {
     const trimmed = editNameValue.trim();

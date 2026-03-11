@@ -40,6 +40,7 @@ export function EditableName({
         className="w-full min-w-0 rounded border border-border bg-background px-2 py-1 font-medium text-foreground outline-none focus:border-accent"
         aria-label={ariaLabel}
         autoFocus
+        disabled={disabled}
       />
     );
   }
