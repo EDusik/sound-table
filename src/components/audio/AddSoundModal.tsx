@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
 import {
-  AUDIO_UPLOAD_MAX_BYTES,
   isAllowedAudioUrl,
   getAllowedAudioExtension,
   ALLOWED_AUDIO_EXTENSIONS,
 } from "@/lib/storage";
+import { getMaxUploadSizeBytes, getUserPlanLimits } from "@/lib/planLimits";
 import { FreesoundSearch } from "@/components/audio/FreesoundSearch";
 import { SpotifyAddForm } from "@/components/audio/SpotifyAddForm";
 import { Modal } from "@/components/ui/Modal";
@@ -71,7 +71,10 @@ export function AddSoundModal({
   const hasUrlOrFile = addUrl.trim() !== "" || hasFileInput;
   const hasSpotifyUrl = spotifyUrl.trim() !== "";
 
-  const handleAddSpotify = async (track: { name: string; spotifyUri: string }) => {
+  const handleAddSpotify = async (track: {
+    name: string;
+    spotifyUri: string;
+  }) => {
     setSpotifyError(null);
     try {
       await addAudioMutation.mutateAsync({
@@ -115,10 +118,11 @@ export function AddSoundModal({
       setAddError(t("addSound.invalidFileType", { extensions }));
       return;
     }
-    if (addFile && addFile.size > AUDIO_UPLOAD_MAX_BYTES) {
+    const maxBytes = getMaxUploadSizeBytes();
+    if (addFile && addFile.size > maxBytes) {
       setAddError(
-        t("addSound.fileTooLarge", {
-          maxMb: String(AUDIO_UPLOAD_MAX_BYTES / 1024 / 1024),
+        t("limits.fileTooLargeForPlan", {
+          max: getUserPlanLimits().maxFileSizeMB,
         }),
       );
       return;
@@ -139,7 +143,8 @@ export function AddSoundModal({
       } else {
         const ytId = extractYouTubeId(urlTrimmed);
         if (ytId) {
-          const youtubeName = name || youtubeTitle || t("addSound.youtubeAudio");
+          const youtubeName =
+            name || youtubeTitle || t("addSound.youtubeAudio");
           await addAudioMutation.mutateAsync({
             name: youtubeName,
             sourceUrl: ytId,
@@ -159,9 +164,23 @@ export function AddSoundModal({
       setAddFile(null);
       setSpotifyUrl("");
     } catch (err) {
-      const msg = getErrorMessage(err, t("addSound.failedToAdd"));
+      const raw = err instanceof Error ? err.message : "";
+      const isLimitKey = raw.startsWith("limits.");
+      const msg = isLimitKey
+        ? t(raw)
+        : getErrorMessage(err, t("addSound.failedToAdd"));
       setAddError(msg);
-      toast.warning(msg);
+      if (isLimitKey) {
+        toast.warning(msg, {
+          description: t("limits.upgradeSuggestion"),
+          action: {
+            label: "Upgrade",
+            onClick: () => window.open("/plans", "_blank"),
+          },
+        });
+      } else {
+        toast.warning(msg);
+      }
     }
   };
 
@@ -209,9 +228,17 @@ export function AddSoundModal({
           <FreesoundSearch sceneId={sceneId} onAdded={onAdded} />
         </div>
         <CollapsibleSection summary={t("addSound.addAudio")}>
-          <form onSubmit={handleUnifiedSubmit} className="space-y-6 border-t border-border p-4">
+          <form
+            onSubmit={handleUnifiedSubmit}
+            className="space-y-6 border-t border-border p-4"
+          >
             <div>
-              <label htmlFor="add-sound-name" className="block text-xs text-foreground">{t("addSound.name")}</label>
+              <label
+                htmlFor="add-sound-name"
+                className="block text-xs text-foreground"
+              >
+                {t("addSound.name")}
+              </label>
               <input
                 id="add-sound-name"
                 type="text"
@@ -224,105 +251,116 @@ export function AddSoundModal({
             </div>
             <hr className="border-border" />
             <div className="space-y-6">
-            <div className="space-y-6 border-l pl-4 border-[var(--accent)]">
-            <div>
-              <label htmlFor="add-sound-url" className="block text-xs text-foreground">
-                {t("addSound.urlLabel")}
-              </label>
-              <input
-                id="add-sound-url"
-                type="url"
-                value={addUrl}
-                onChange={(e) => {
-                  setAddUrl(e.target.value);
-                  if (addFile) setAddFile(null);
-                }}
-                disabled={hasFileInput || hasSpotifyUrl}
-                className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-foreground disabled:opacity-60 disabled:cursor-not-allowed"
-                placeholder={t("addSound.urlPlaceholder")}
-                autoComplete="url"
-              />
-            </div>
-            {(addError || spotifyError) && (
-              <p className="text-sm text-red-400" role="alert">
-                {addError || spotifyError}
-              </p>
-            )}
-            <SpotifyAddForm
-              sharedName={addName}
-              spotifyUrl={spotifyUrl}
-              onSpotifyUrlChange={setSpotifyUrl}
-              disabled={hasUrlOrFile}
-              hideSubmitButton
-              onAdd={handleAddSpotify}
-              error={spotifyError}
-              isAdding={addAudioMutation.isPending}
-            />
-            <div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {t("addSound.orChooseFile")}
-              </p>
-              {!canUploadFile && (
-                <p className="mt-1 text-xs text-accent">
-                  {t("addSound.signInToUpload")}{" "}
-                  <Link href="/login" className="underline hover:no-underline">
-                    {t("nav.signIn")}
-                  </Link>
-                </p>
-              )}
-              <input
-                type="file"
-                accept=".mp3,.wav,.ogg,audio/mpeg,audio/wav,audio/ogg"
-                disabled={addUrl.trim() !== "" || hasSpotifyUrl || !canUploadFile}
-                aria-label={t("addSound.orChooseFile")}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f && !getAllowedAudioExtension(f)) {
-                    setAddError(
-                      t("addSound.formatNotAllowed", {
-                        extensions: ALLOWED_AUDIO_EXTENSIONS.join(", "),
-                      }),
-                    );
-                    e.target.value = "";
-                    return;
-                  }
-                  setAddError(null);
-                  setAddFile(f ?? null);
-                  if (f) setAddUrl("");
-                  e.target.value = "";
-                }}
-                className="mt-1 w-full text-sm text-foreground file:mr-2 file:rounded file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-background disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-              {addFile && (
-                <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>
-                    {addFile.name} ({(addFile.size / 1024 / 1024).toFixed(2)}{" "}
-                    MB)
-                    {addFile.size > AUDIO_UPLOAD_MAX_BYTES && (
-                      <span className="text-red-400">
-                        {" "}
-                        — {t("addSound.fileOverLimit")}
-                      </span>
-                    )}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setAddFile(null)}
-                    className="text-accent hover:underline"
+              <div className="space-y-6 border-l pl-4 border-[var(--accent)]">
+                <div>
+                  <label
+                    htmlFor="add-sound-url"
+                    className="block text-xs text-foreground"
                   >
-                    {t("addSound.removeFile")}
-                  </button>
-                </p>
-              )}
-            </div>
-            </div>
-            <button
-              type="submit"
-              disabled={adding || !canAdd}
-              className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
-            >
-              {adding ? t("addSound.adding") : t("addSound.addAudioButton")}
-            </button>
+                    {t("addSound.urlLabel")}
+                  </label>
+                  <input
+                    id="add-sound-url"
+                    type="url"
+                    value={addUrl}
+                    onChange={(e) => {
+                      setAddUrl(e.target.value);
+                      if (addFile) setAddFile(null);
+                    }}
+                    disabled={hasFileInput || hasSpotifyUrl}
+                    className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-foreground disabled:opacity-60 disabled:cursor-not-allowed"
+                    placeholder={t("addSound.urlPlaceholder")}
+                    autoComplete="url"
+                  />
+                </div>
+                {(addError || spotifyError) && (
+                  <p className="text-sm text-red-400" role="alert">
+                    {addError || spotifyError}
+                  </p>
+                )}
+                <SpotifyAddForm
+                  sharedName={addName}
+                  spotifyUrl={spotifyUrl}
+                  onSpotifyUrlChange={setSpotifyUrl}
+                  disabled={hasUrlOrFile}
+                  hideSubmitButton
+                  onAdd={handleAddSpotify}
+                  error={spotifyError}
+                  isAdding={addAudioMutation.isPending}
+                />
+                <div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {t("addSound.orChooseFile")}
+                  </p>
+                  {!canUploadFile && (
+                    <p className="mt-1 text-xs text-accent">
+                      {t("addSound.signInToUpload")}{" "}
+                      <Link
+                        href="/login"
+                        className="underline hover:no-underline"
+                      >
+                        {t("nav.signIn")}
+                      </Link>
+                    </p>
+                  )}
+                  <input
+                    type="file"
+                    accept=".mp3,.wav,.ogg,audio/mpeg,audio/wav,audio/ogg"
+                    disabled={
+                      addUrl.trim() !== "" || hasSpotifyUrl || !canUploadFile
+                    }
+                    aria-label={t("addSound.orChooseFile")}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f && !getAllowedAudioExtension(f)) {
+                        setAddError(
+                          t("addSound.formatNotAllowed", {
+                            extensions: ALLOWED_AUDIO_EXTENSIONS.join(", "),
+                          }),
+                        );
+                        e.target.value = "";
+                        return;
+                      }
+                      setAddError(null);
+                      setAddFile(f ?? null);
+                      if (f) setAddUrl("");
+                      e.target.value = "";
+                    }}
+                    className="mt-1 w-full text-sm text-foreground file:mr-2 file:rounded file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-background disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                  {addFile && (
+                    <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>
+                        {addFile.name} (
+                        {(addFile.size / 1024 / 1024).toFixed(2)} MB)
+                        {addFile.size > getMaxUploadSizeBytes() && (
+                          <span className="text-red-400">
+                            {" "}
+                            —{" "}
+                            {t("limits.fileTooLargeForPlan", {
+                              max: getUserPlanLimits().maxFileSizeMB,
+                            })}
+                          </span>
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setAddFile(null)}
+                        className="text-accent hover:underline"
+                      >
+                        {t("addSound.removeFile")}
+                      </button>
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={adding || !canAdd}
+                className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
+              >
+                {adding ? t("addSound.adding") : t("addSound.addAudioButton")}
+              </button>
             </div>
           </form>
         </CollapsibleSection>
