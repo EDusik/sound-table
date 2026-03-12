@@ -50,12 +50,19 @@
   "nav.themeDark": "Dark mode",
   "nav.supportSoundQuest": "Support SoundQuest ❤️",
   "nav.supportSoundQuestTooltip": "Help keep SoundQuest alive 🎲",
+  "nav.plans": "Plans",
+  "nav.plansTooltip": "View plans and upgrade",
 
+  "footer.plansQuestion": "Want more features?",
+  "footer.plansLink": "Explore {brand} plans",
   "footer.supportIntro": "Enjoying {brand}? Consider ",
   "footer.supportLinkText": "supporting the project",
   "footer.buyMeACoffeeTitle": "Support SoundQuest",
   "footer.buyMeACoffeeAria": "Support the project on Buy Me a Coffee (opens in new tab)",
   "footer.opensInNewTab": "opens in new tab",
+
+  "plans.supportIntro": "Enjoying {brand}? Consider ",
+  "plans.supportLinkText": "supporting the project",
 
   "support.title": "Support SoundQuest",
   "support.titlePrefix": "Support ",
@@ -154,7 +161,7 @@
   "addSound.name": "Name",
   "addSound.nameOptional": "Name (optional)",
   "addSound.namePlaceholder": "e.g. RPG Battle",
-  "addSound.urlLabel": "URL (YouTube or MP3/WAV/OGG audio) or upload — max. 25 MB",
+  "addSound.urlLabel": "URL (YouTube or MP3/WAV/OGG audio) or upload",
   "addSound.urlPlaceholder": "https://youtube.com/… or https://…/audio.mp3",
   "addSound.orChooseFile": "Or choose a file on your computer:",
   "addSound.removeFile": "Remove file",
@@ -181,6 +188,9 @@
   "spotifyTest.addedCount": "Added songs ({count})",
   "spotifyTest.emptyMessage": "No songs added yet. Paste a Spotify link above and click Add.",
   "addSound.signInToUpload": "Sign in to upload your own files. You can still add sounds via URL or Freesound.",
+  "addSound.uploadPlanInfo": "Your {plan} plan: up to {maxSize}MB per file · {uploads} sounds · {storage} total storage.",
+  "addSound.uploadPlanUpgrade": "Want more?",
+  "addSound.uploadPlanUpgradeLink": "Explore plans",
 
   "freesound.title": "🔍 Search Freesound",
   "freesound.notConfiguredPrefix": "Add ",
@@ -222,5 +232,36 @@
 
   "language.switch": "Language",
   "language.english": "English",
-  "language.portuguese": "Português (BR)"
+  "language.portuguese": "Português (BR)",
+
+  "limits.sceneLimitReached": "You've reached the maximum of {max} scenes on the {plan} plan. Upgrade to create more.",
+  "limits.uploadLimitReached": "You've reached the limit of {max} sounds on the {plan} plan. Upgrade to add more.",
+  "limits.fileTooLargeForPlan": "File exceeds the {max}MB limit for your plan. Upgrade for larger uploads.",
+  "limits.storageExceeded": "Storage limit exceeded for the {plan} plan ({max}MB). Upgrade for more space.",
+  "limits.upgradeSuggestion": "You've reached the limit of your plan. Upgrade to unlock more scenes and storage.",
+  "limits.migrationPartial": "Some local data could not be migrated due to plan limits.",
+  "limits.migrationPartialDetail": "{scenesSkipped} scene(s) and {audiosSkipped} sound(s) were skipped. Upgrade your plan to migrate everything.",
+
+  "pricing.plan.noob": "Noob",
+  "pricing.plan.player": "Player",
+  "pricing.plan.dungeon_master": "Dungeon Master",
+
+  "pricing.title": "Choose Your Plan",
+  "pricing.subtitle": "Pick the plan that fits your adventure",
+  "pricing.free": "Free",
+  "pricing.month": "month",
+  "pricing.mostPopular": "Most Popular",
+  "pricing.startFree": "Start Free",
+  "pricing.upgradeTo": "Upgrade to {plan}",
+  "pricing.becomeDungeonMaster": "Become a Dungeon Master",
+  "pricing.scenes": "Scenes",
+  "pricing.scenesUnlimited": "Unlimited scenes",
+  "pricing.soundUploads": "Sound uploads",
+  "pricing.perAudio": "per audio",
+  "pricing.storage": "Storage",
+  "pricing.checkoutError": "Could not start checkout. Please try again.",
+
+  "success.title": "Payment successful!",
+  "success.description": "Your adventure continues. Your plan is now active — head back to the dashboard to start creating.",
+  "success.backToDashboard": "Back to dashboard"
 }

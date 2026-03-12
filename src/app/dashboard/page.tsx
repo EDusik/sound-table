@@ -26,6 +26,8 @@ import { LABEL_DEFAULT_COLORS } from "@/components/editor/LabelEditor";
 import { validateSceneForm } from "@/lib/sceneSchema";
 import { getErrorMessage } from "@/lib/errors";
 import { useFocusEntryOnce } from "@/hooks/useFocusEntryOnce";
+import { usePlanLimitToast } from "@/hooks/usePlanLimitToast";
+import { isPlanLimitError } from "@/lib/planLimits";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -61,6 +63,7 @@ export default function DashboardPage() {
   const [createFieldErrors, setCreateFieldErrors] = useState<Record<string, string>>({});
   const showFocusEntry = useFocusEntryOnce("dashboard");
   const t = useTranslations();
+  const notifyLimit = usePlanLimitToast();
 
   const error = queryError ? getErrorMessage(queryError, t("errors.loadScenes")) : null;
 
@@ -110,7 +113,9 @@ export default function DashboardPage() {
   };
 
   const createError = createSceneMutation.error
-    ? getErrorMessage(createSceneMutation.error, t("errors.createScene"))
+    ? isPlanLimitError(createSceneMutation.error)
+      ? t(createSceneMutation.error.errorKey, createSceneMutation.error.params)
+      : getErrorMessage(createSceneMutation.error, t("errors.createScene"))
     : null;
 
   const handleCreateSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -135,8 +140,8 @@ export default function DashboardPage() {
       });
       closeCreateModal();
       router.push(`/scene/${scene.id}`);
-    } catch {
-      // Error handled via createSceneMutation.error
+    } catch (err) {
+      notifyLimit(err);
     }
   };
 

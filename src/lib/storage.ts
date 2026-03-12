@@ -11,6 +11,7 @@ import type { Scene, AudioItem, AudioKind } from "./types";
 import { getFirebaseDb, isFirestoreEnabled } from "./firebase";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { ANONYMOUS_UID } from "./authConstants";
+import { enforcePlanLimit, checkSceneLimit, checkUploadLimit, checkFileSize, checkStorageUsage, getUserPlanLimits } from "./planLimits";
 import {
   collection,
   doc,
@@ -66,7 +67,7 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-/** Max size for audio uploads (25 MB). */
+/** @deprecated Use getMaxUploadSizeBytes() from planLimits for plan-aware limit. Kept for backward compat. */
 export const AUDIO_UPLOAD_MAX_BYTES = 25 * 1024 * 1024;
 
 /** Allowed audio extensions (mp3 preferred, plus wav and ogg). */
@@ -107,8 +108,27 @@ export function getAllowedAudioExtension(file: File): string | null {
 }
 
 /**
+ * Returns the total storage used by a user in bytes by listing all files
+ * in the user's Supabase Storage folder.
+ */
+export async function getUserStorageUsageBytes(userId: string): Promise<number> {
+  if (!supabase || !isSupabaseConfigured) return 0;
+  const { data, error } = await supabase.storage
+    .from("audios")
+    .list(userId, { limit: 1000 });
+  if (error || !data) return 0;
+  let total = 0;
+  for (const item of data) {
+    if (item.metadata?.size) {
+      total += Number(item.metadata.size);
+    }
+  }
+  return total;
+}
+
+/**
  * Uploads an audio file (MP3, WAV or OGG) to Supabase Storage and returns the public URL.
- * Requires Supabase and authenticated user. File must be <= AUDIO_UPLOAD_MAX_BYTES.
+ * Requires Supabase and authenticated user. Validates file size and storage usage against plan limits.
  */
 export async function uploadAudioFile(
   sceneId: string,
@@ -127,11 +147,9 @@ export async function uploadAudioFile(
       `Invalid file type. Allowed formats: ${ALLOWED_AUDIO_EXTENSIONS.join(", ")}`,
     );
   }
-  if (file.size > AUDIO_UPLOAD_MAX_BYTES) {
-    throw new Error(
-      `File is too large. Maximum size is ${AUDIO_UPLOAD_MAX_BYTES / 1024 / 1024} MB.`,
-    );
-  }
+  enforcePlanLimit(checkFileSize(file.size));
+  const currentUsage = await getUserStorageUsageBytes(userId);
+  enforcePlanLimit(checkStorageUsage(currentUsage, file.size));
   const path = `${userId}/${sceneId}/${generateId()}${ext}`;
   const contentType = EXT_TO_MIME[ext] ?? "audio/mpeg";
   const client = supabase;
@@ -548,6 +566,20 @@ async function deleteFirestoreAudio(audioId: string): Promise<void> {
   await deleteDoc(doc(database, "audios", audioId));
 }
 
+/**
+ * Counts all audio records across every scene owned by a user.
+ * Used by plan limit enforcement to check against the upload cap.
+ */
+export async function countAllUserAudios(userId: string): Promise<number> {
+  const scenes = await getScenes(userId);
+  let total = 0;
+  for (const scene of scenes) {
+    const audios = await getAudios(scene.id);
+    total += audios.length;
+  }
+  return total;
+}
+
 export async function getScenes(userId: string): Promise<Scene[]> {
   if (isFirestoreEnabled()) return getFirestoreScenes(userId);
   if (isSupabaseStorageEnabled()) {
@@ -577,6 +609,8 @@ export async function createScene(
     if (sessionUserId) effectiveUserId = sessionUserId;
   }
   const existing = await getScenes(effectiveUserId);
+  enforcePlanLimit(checkSceneLimit(existing.length));
+
   const scene: Scene = {
     id,
     title: data.title,
@@ -632,6 +666,12 @@ export async function addAudio(
   sceneId: string,
   data: { name: string; sourceUrl: string; kind?: AudioKind },
 ): Promise<AudioItem> {
+  const scene = await getScene(sceneId);
+  if (scene) {
+    const totalAudios = await countAllUserAudios(scene.userId);
+    enforcePlanLimit(checkUploadLimit(totalAudios));
+  }
+
   const id = generateId();
   const existing = await getAudios(sceneId);
   const order = existing.length;
@@ -713,24 +753,31 @@ export async function reorderScenes(
   }
 }
 
+export type MigrationResult = {
+  scenesMigrated: number;
+  scenesSkipped: number;
+  audiosMigrated: number;
+  audiosSkipped: number;
+};
+
 /**
- * Migrates all localStorage-based scenes and audios for a given "from" user id
- * into Supabase for the currently authenticated Supabase user.
+ * Migrates localStorage scenes/audios into Supabase, respecting plan limits.
  *
  * - Only runs when Supabase storage is enabled and there is a logged-in user.
- * - Data in localStorage is intentionally preserved; a per-user flag prevents
- *   running the migration more than once.
+ * - Scenes beyond the plan cap are skipped (along with their audios).
+ * - Audios beyond the upload cap are skipped even if the scene was migrated.
+ * - Returns a summary so callers can notify the user about skipped items.
  */
 export async function migrateLocalDataToSupabase(
-  // Kept for backwards compatibility; currently unused, but allows
-  // future targeting of specific anonymous ids if needed.
   _fromUserId: string, // eslint-disable-line @typescript-eslint/no-unused-vars
-): Promise<void> {
-  if (typeof window === "undefined") return;
-  if (!isSupabaseStorageEnabled()) return;
+): Promise<MigrationResult> {
+  const empty: MigrationResult = { scenesMigrated: 0, scenesSkipped: 0, audiosMigrated: 0, audiosSkipped: 0 };
+
+  if (typeof window === "undefined") return empty;
+  if (!isSupabaseStorageEnabled()) return empty;
 
   const toUserId = await getSupabaseUserId();
-  if (!toUserId) return;
+  if (!toUserId) return empty;
 
   let localScenes: Scene[] = [];
   let localAudios: AudioItem[] = [];
@@ -749,30 +796,47 @@ export async function migrateLocalDataToSupabase(
     localAudios = [];
   }
 
-  // Migrate all local scenes found, regardless of stored userId.
-  // This better reflects the user expectation: "everything I created
-  // in this browser before logging in should appear in my account".
-  const scenesToMigrate = localScenes;
-  if (scenesToMigrate.length === 0) {
-    return;
+  if (localScenes.length === 0) return empty;
+
+  const limits = getUserPlanLimits();
+  const existingScenes = await getSupabaseScenes(toUserId);
+  let currentSceneCount = existingScenes.length;
+
+  let totalAudioCount = 0;
+  for (const s of existingScenes) {
+    const audios = await getSupabaseAudios(s.id);
+    totalAudioCount += audios.length;
   }
 
-  for (const scene of scenesToMigrate) {
-    const sceneForSupabase: Scene = {
-      ...scene,
-      userId: toUserId,
-    };
-    await setSupabaseScene(sceneForSupabase);
+  const result: MigrationResult = { scenesMigrated: 0, scenesSkipped: 0, audiosMigrated: 0, audiosSkipped: 0 };
+  const existingSceneIds = new Set(existingScenes.map((s) => s.id));
 
-    const audiosForScene = localAudios.filter(
-      (audio) => audio.sceneId === scene.id,
-    );
+  for (const scene of localScenes) {
+    const isAlreadyMigrated = existingSceneIds.has(scene.id);
+
+    if (!isAlreadyMigrated && Number.isFinite(limits.scenes) && currentSceneCount >= limits.scenes) {
+      const audiosForScene = localAudios.filter((a) => a.sceneId === scene.id);
+      result.scenesSkipped++;
+      result.audiosSkipped += audiosForScene.length;
+      continue;
+    }
+
+    const sceneForSupabase: Scene = { ...scene, userId: toUserId };
+    await setSupabaseScene(sceneForSupabase);
+    if (!isAlreadyMigrated) currentSceneCount++;
+    result.scenesMigrated++;
+
+    const audiosForScene = localAudios.filter((a) => a.sceneId === scene.id);
     for (const audio of audiosForScene) {
-      const audioForSupabase: AudioItem = {
-        ...audio,
-        sceneId: sceneForSupabase.id,
-      };
-      await setSupabaseAudio(audioForSupabase);
+      if (totalAudioCount >= limits.uploads) {
+        result.audiosSkipped++;
+        continue;
+      }
+      await setSupabaseAudio({ ...audio, sceneId: sceneForSupabase.id });
+      totalAudioCount++;
+      result.audiosMigrated++;
     }
   }
+
+  return result;
 }

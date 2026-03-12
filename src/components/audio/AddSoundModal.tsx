@@ -8,7 +8,8 @@ import {
   getAllowedAudioExtension,
   ALLOWED_AUDIO_EXTENSIONS,
 } from "@/lib/storage";
-import { getMaxUploadSizeBytes, getUserPlanLimits } from "@/lib/planLimits";
+import { getMaxUploadSizeBytes, getUserPlanLimits, getUserPlanId } from "@/lib/planLimits";
+import { formatStorage } from "@/lib/plans";
 import { FreesoundSearch } from "@/components/audio/FreesoundSearch";
 import { SpotifyAddForm } from "@/components/audio/SpotifyAddForm";
 import { Modal } from "@/components/ui/Modal";
@@ -23,6 +24,7 @@ import {
 } from "@/hooks/api";
 import { useTranslations } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlanLimitToast } from "@/hooks/usePlanLimitToast";
 
 interface AddSoundModalProps {
   open: boolean;
@@ -46,6 +48,7 @@ export function AddSoundModal({
   const [spotifyUrl, setSpotifyUrl] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
   const [spotifyError, setSpotifyError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const youtubeId = extractYouTubeId(addUrl.trim());
   const canUploadFile = isAuthenticated;
@@ -53,6 +56,11 @@ export function AddSoundModal({
   const uploadMutation = useUploadAudioFileMutation();
   const addAudioMutation = useAddAudioMutation(sceneId);
   const adding = uploadMutation.isPending || addAudioMutation.isPending;
+  const notifyLimit = usePlanLimitToast();
+  const planId = getUserPlanId();
+  const planLimits = getUserPlanLimits();
+  const planDisplayName = t(`pricing.plan.${planId}`);
+  const isFreePlan = planId === "noob";
 
   useEffect(() => {
     if (open) {
@@ -63,6 +71,7 @@ export function AddSoundModal({
         setSpotifyUrl("");
         setAddError(null);
         setSpotifyError(null);
+        setFileError(null);
       }, 0);
     }
   }, [open]);
@@ -87,9 +96,11 @@ export function AddSoundModal({
       setAddUrl("");
       setAddFile(null);
     } catch (err) {
-      const msg = getErrorMessage(err, t("addSound.failedToAdd"));
-      setSpotifyError(msg);
-      toast.warning(msg);
+      if (!notifyLimit(err)) {
+        const msg = getErrorMessage(err, t("addSound.failedToAdd"));
+        setSpotifyError(msg);
+        toast.warning(msg);
+      }
     }
   };
 
@@ -118,12 +129,9 @@ export function AddSoundModal({
       setAddError(t("addSound.invalidFileType", { extensions }));
       return;
     }
-    const maxBytes = getMaxUploadSizeBytes();
-    if (addFile && addFile.size > maxBytes) {
+    if (addFile && addFile.size > getMaxUploadSizeBytes()) {
       setAddError(
-        t("limits.fileTooLargeForPlan", {
-          max: getUserPlanLimits().maxFileSizeMB,
-        }),
+        t("limits.fileTooLargeForPlan", { max: planLimits.maxFileSizeMB }),
       );
       return;
     }
@@ -164,21 +172,9 @@ export function AddSoundModal({
       setAddFile(null);
       setSpotifyUrl("");
     } catch (err) {
-      const raw = err instanceof Error ? err.message : "";
-      const isLimitKey = raw.startsWith("limits.");
-      const msg = isLimitKey
-        ? t(raw)
-        : getErrorMessage(err, t("addSound.failedToAdd"));
-      setAddError(msg);
-      if (isLimitKey) {
-        toast.warning(msg, {
-          description: t("limits.upgradeSuggestion"),
-          action: {
-            label: "Upgrade",
-            onClick: () => window.open("/plans", "_blank"),
-          },
-        });
-      } else {
+      if (!notifyLimit(err)) {
+        const msg = getErrorMessage(err, t("addSound.failedToAdd"));
+        setAddError(msg);
         toast.warning(msg);
       }
     }
@@ -313,7 +309,7 @@ export function AddSoundModal({
                     onChange={(e) => {
                       const f = e.target.files?.[0];
                       if (f && !getAllowedAudioExtension(f)) {
-                        setAddError(
+                        setFileError(
                           t("addSound.formatNotAllowed", {
                             extensions: ALLOWED_AUDIO_EXTENSIONS.join(", "),
                           }),
@@ -321,6 +317,16 @@ export function AddSoundModal({
                         e.target.value = "";
                         return;
                       }
+                      if (f && f.size > getMaxUploadSizeBytes()) {
+                        setFileError(
+                          t("limits.fileTooLargeForPlan", {
+                            max: planLimits.maxFileSizeMB,
+                          }),
+                        );
+                        e.target.value = "";
+                        return;
+                      }
+                      setFileError(null);
                       setAddError(null);
                       setAddFile(f ?? null);
                       if (f) setAddUrl("");
@@ -328,6 +334,11 @@ export function AddSoundModal({
                     }}
                     className="mt-1 w-full text-sm text-foreground file:mr-2 file:rounded file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-background disabled:opacity-60 disabled:cursor-not-allowed"
                   />
+                  {fileError && (
+                    <p className="mt-1 text-sm text-red-400" role="alert">
+                      {fileError}
+                    </p>
+                  )}
                   {addFile && (
                     <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                       <span>
@@ -338,7 +349,7 @@ export function AddSoundModal({
                             {" "}
                             —{" "}
                             {t("limits.fileTooLargeForPlan", {
-                              max: getUserPlanLimits().maxFileSizeMB,
+                              max: planLimits.maxFileSizeMB,
                             })}
                           </span>
                         )}
@@ -352,6 +363,26 @@ export function AddSoundModal({
                       </button>
                     </p>
                   )}
+                  <p className="mt-2 text-xs text-muted-foreground/70">
+                    {t("addSound.uploadPlanInfo", {
+                      plan: planDisplayName,
+                      maxSize: planLimits.maxFileSizeMB,
+                      uploads: planLimits.uploads,
+                      storage: formatStorage(planLimits.storageMB),
+                    })}
+                    {isFreePlan && (
+                      <>
+                        {" "}
+                        {t("addSound.uploadPlanUpgrade")}{" "}
+                        <Link
+                          href="/plans"
+                          className="text-accent underline underline-offset-2 hover:no-underline"
+                        >
+                          {t("addSound.uploadPlanUpgradeLink")}
+                        </Link>
+                      </>
+                    )}
+                  </p>
                 </div>
               </div>
               <button

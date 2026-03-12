@@ -14,6 +14,7 @@ import {
 } from "@/hooks/api";
 import { getErrorMessage, getTranslatedFreesoundError } from "@/lib/errors";
 import { useTranslations } from "@/contexts/I18nContext";
+import { usePlanLimitToast } from "@/hooks/usePlanLimitToast";
 import { Spinner } from "@/components/ui/Spinner";
 import { CollapsibleSection } from "@/components/ui/CollapsibleSection";
 import { FreesoundResultItem } from "./FreesoundResultItem";
@@ -55,6 +56,7 @@ export function FreesoundSearch({ sceneId, onAdded }: FreesoundSearchProps) {
     useFreesoundConfiguredQuery();
   const searchQuery = useFreesoundSearchQuery(searchParams);
   const addAudioMutation = useAddAudioMutation(sceneId);
+  const notifyLimit = usePlanLimitToast();
 
   const results: FreesoundSound[] = searchQuery.data?.results ?? [];
   const searchData: FreesoundSearchResponse | undefined = searchQuery.data;
@@ -133,7 +135,9 @@ export function FreesoundSearch({ sceneId, onAdded }: FreesoundSearchProps) {
       });
       onAdded();
     } catch (err) {
-      toast.warning(getErrorMessage(err, t("freesound.addFailed")));
+      if (!notifyLimit(err)) {
+        toast.warning(getErrorMessage(err, t("freesound.addFailed")));
+      }
     } finally {
       setAddingId(null);
     }

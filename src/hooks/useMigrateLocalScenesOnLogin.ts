@@ -2,35 +2,55 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { migrateLocalDataToSupabase } from "@/lib/storage";
+import { useTranslations } from "@/contexts/I18nContext";
+import { migrateLocalDataToSupabase, type MigrationResult } from "@/lib/storage";
 import { queryKeys } from "@/hooks/api/queryKeys";
 
 /**
  * Hook that, once the user is authenticated with Supabase, asks the
  * storage layer to migrate any existing localStorage-based scenes and
- * audios into Supabase.
+ * audios into Supabase, respecting plan limits.
  *
- * A versioned per-user flag inside migrateLocalDataToSupabase prevents
- * repeated work, so this hook can safely call it on every auth change.
+ * When items are skipped due to plan limits, a toast prompts the user
+ * to upgrade.
  */
 export function useMigrateLocalScenesOnLogin() {
   const { user, isAuthenticated, isConfigured, loading } = useAuth();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const t = useTranslations();
 
   useEffect(() => {
     if (loading || !isConfigured || !isAuthenticated || !user?.uid) return;
 
     migrateLocalDataToSupabase(user.uid)
-      .then(() => {
-        // After a successful migration, refetch scenes for this user so
-        // the UI reflects the newly moved data without requiring a reload.
+      .then((result: MigrationResult) => {
         queryClient.invalidateQueries({
           queryKey: queryKeys.scenes.list(user.uid),
         });
+
+        const hasSkipped = result.scenesSkipped > 0 || result.audiosSkipped > 0;
+        if (hasSkipped) {
+          toast.warning(
+            t("limits.migrationPartialDetail", {
+              scenesSkipped: String(result.scenesSkipped),
+              audiosSkipped: String(result.audiosSkipped),
+            }),
+            {
+              duration: 10000,
+              action: {
+                label: "Upgrade",
+                onClick: () => router.push("/plans"),
+              },
+            },
+          );
+        }
       })
       .catch((err) => {
         console.error("Failed to migrate local scenes to Supabase:", err);
       });
-  }, [user, isAuthenticated, isConfigured, loading, queryClient]);
+  }, [user, isAuthenticated, isConfigured, loading, queryClient, router, t]);
 }

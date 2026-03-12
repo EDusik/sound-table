@@ -7,8 +7,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslations } from "@/contexts/I18nContext";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LanguageSwitch } from "@/components/layout/LanguageSwitch";
-import { GuestSignInHintTooltip, useGuestHintSeen } from "@/components/layout/GuestSignInHint";
-import { SignOutIcon, HeartIcon } from "@/components/icons";
+import {
+  GuestSignInHintTooltip,
+  useGuestHintSeen,
+} from "@/components/layout/GuestSignInHint";
+import { SignOutIcon } from "@/components/icons";
 
 interface NavbarProps {
   /** Logo content (e.g. <SoundQuestLogo />). If logoHref is set, logo is wrapped in a link. */
@@ -35,7 +38,10 @@ export function Navbar({ logo, logoHref, logoAriaLabel }: NavbarProps) {
 
   useEffect(() => {
     if (!isGuest || hasSeenGuestHint) return;
-    const id = window.setTimeout(() => setShowGuestHint(true), GUEST_HINT_DELAY_MS);
+    const id = window.setTimeout(
+      () => setShowGuestHint(true),
+      GUEST_HINT_DELAY_MS,
+    );
     return () => clearTimeout(id);
   }, [isGuest, hasSeenGuestHint]);
 
@@ -47,7 +53,10 @@ export function Navbar({ logo, logoHref, logoAriaLabel }: NavbarProps) {
   useEffect(() => {
     if (!userMenuOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(e.target as Node)
+      ) {
         setUserMenuOpen(false);
       }
     };
@@ -68,7 +77,10 @@ export function Navbar({ logo, logoHref, logoAriaLabel }: NavbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-10 w-full border-b border-border bg-background backdrop-blur" role="banner">
+    <header
+      className="sticky top-0 z-10 w-full border-b border-border bg-background backdrop-blur"
+      role="banner"
+    >
       <div className="flex w-full items-center">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 gap-0">
           <h1 className="text-base font-semibold text-foreground sm:text-xl">
@@ -126,23 +138,30 @@ export function Navbar({ logo, logoHref, logoAriaLabel }: NavbarProps) {
                     className="absolute right-0 top-full z-20 mt-1.5 min-w-[180px] rounded-lg border border-border bg-background py-1 shadow-lg"
                     role="menu"
                   >
-                    <div className="border-b border-border px-3 py-2 text-sm text-muted-foreground" role="none">
+                    <div
+                      className="border-b border-border px-3 py-2 text-sm text-muted-foreground"
+                      role="none"
+                    >
                       <p className="truncate font-medium text-foreground">
-                        {user.displayName ?? user.email ?? t("nav.userFallback")}
+                        {user.displayName ??
+                          user.email ??
+                          t("nav.userFallback")}
                       </p>
                       {user.email && user.displayName && (
                         <p className="truncate text-xs">{user.email}</p>
                       )}
                     </div>
                     <Link
-                      href="/support"
+                      href="/plans"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground hover:bg-card transition-colors"
                       role="menuitem"
-                      title={t("nav.supportSoundQuestTooltip")}
+                      title={t("nav.plansTooltip")}
                     >
-                      <HeartIcon className="h-4 w-4 shrink-0" />
-                      {t("nav.supportSoundQuest")}
+                      <span className="text-sm shrink-0" aria-hidden>
+                        📜
+                      </span>
+                      {t("nav.plans")}
                     </Link>
                     <button
                       ref={signOutButtonRef}

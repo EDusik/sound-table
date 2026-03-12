@@ -14,7 +14,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useMigrateLocalScenesOnLogin } from "@/hooks/useMigrateLocalScenesOnLogin";
 
 /** Routes that render immediately without waiting for auth (better LCP). */
-const PUBLIC_ROUTES = ["/", "/support", "/login"];
+const PUBLIC_ROUTES = ["/", "/support", "/login", "/plans", "/success"];
 
 function AuthShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
