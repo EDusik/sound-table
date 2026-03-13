@@ -8,20 +8,27 @@ const BRAND_NAME = "SoundQuest";
 /** Renders the word "SoundQuest" in the logo font. Pass className for size (e.g. text-lg, text-xl). */
 export function SoundQuestBrand({ className }: { className?: string }) {
   return (
-    <span className={`font-cinzel font-semibold tracking-wide ${className ?? ""}`}>
+    <span
+      className={`font-cinzel font-semibold tracking-wide ${className ?? ""}`}
+    >
       {BRAND_NAME}
     </span>
   );
 }
 
 /** Splits text by "SoundQuest" and renders the brand name in logo font. Use for i18n strings. */
-export function textWithBrand(text: string, brandClassName?: string): ReactNode {
+export function textWithBrand(
+  text: string,
+  brandClassName?: string,
+): ReactNode {
   const parts = text.split(BRAND_NAME);
   if (parts.length === 1) return text;
   return parts.map((part, i) => (
     <Fragment key={i}>
       {part}
-      {i < parts.length - 1 ? <SoundQuestBrand className={brandClassName} /> : null}
+      {i < parts.length - 1 ? (
+        <SoundQuestBrand className={brandClassName} />
+      ) : null}
     </Fragment>
   ));
 }
@@ -83,4 +90,3 @@ export function SoundQuestLogo({
     </span>
   );
 }
-
