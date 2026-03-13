@@ -14,7 +14,7 @@ export function Hero() {
       className="relative overflow-hidden border-b border-border bg-[color-mix(in_oklab,var(--card)_50%,transparent)]"
       aria-labelledby="hero-heading"
     >
-      <HeroWaveParticles className="pointer-events-none absolute inset-x-0 -bottom-12 h-[100%] z-0 hidden opacity-80 md:block" />
+      <HeroWaveParticles className="pointer-events-none absolute inset-x-0 -bottom-40 h-[100%] z-0 opacity-80 md:-bottom-12" />
       <div className="relative z-10 mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-2 md:items-center md:gap-12 md:py-24 lg:gap-16">
         <div className="space-y-8">
           <h1
