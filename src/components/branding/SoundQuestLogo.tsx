@@ -79,7 +79,7 @@ export function SoundQuestLogo({
   return (
     <span className={`inline-flex items-center gap-1.5 ${className ?? ""}`}>
       {d20}
-      <SoundQuestBrand className="inline" />
+      <SoundQuestBrand className="inline max-[400px]:hidden" />
     </span>
   );
 }

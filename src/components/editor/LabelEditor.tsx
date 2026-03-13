@@ -6,14 +6,14 @@ import { useTranslations } from "@/contexts/I18nContext";
 
 /** WCAG AA compliant with white text (contrast ≥ 4.5:1) */
 const DEFAULT_COLORS = [
-  "#b91c1c",
-  "#b45309",
-  "#4d7c0b",
-  "#047857",
-  "#0e7490",
-  "#1d4ed8",
-  "#6d28d9",
-  "#a21caf",
+  "#dc2626",
+  "#ea580c",
+  "#16a34a",
+  "#0d9488",
+  "#0891b2",
+  "#2563eb",
+  "#7c3aed",
+  "#c026d3",
 ];
 
 export function generateId() {
@@ -62,7 +62,10 @@ export function LabelEditor({
   return (
     <div className="min-w-0">
       <label className="block text-sm font-medium text-foreground">
-        {t("common.labelsCount", { current: String(labels.length), max: String(LABELS_MAX) })}
+        {t("common.labelsCount", {
+          current: String(labels.length),
+          max: String(LABELS_MAX),
+        })}
       </label>
       <div className="mt-2 flex min-w-0 flex-wrap gap-2">
         {labels.map((l) => (
@@ -91,7 +94,9 @@ export function LabelEditor({
             onNewLabelTextChange(e.target.value.slice(0, LABEL_TEXT_MAX))
           }
           maxLength={LABEL_TEXT_MAX}
-          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addLabel())}
+          onKeyDown={(e) =>
+            e.key === "Enter" && (e.preventDefault(), addLabel())
+          }
           className="h-9 min-w-[140px] flex-1 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder-muted focus:border-accent focus:outline-none"
           placeholder={t("common.labelText")}
           id={`${idPrefix}-label-input`}
