@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   useSceneQuery,
@@ -26,6 +26,32 @@ import { useAudioStore } from "@/store/audioStore";
 import { getErrorMessage } from "@/lib/errors";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { useFocusEntryOnce } from "@/hooks/useFocusEntryOnce";
+
+const INACTIVE_AUDIOS_STORAGE_KEY = "soundquest-inactive-audios";
+
+function getInactiveAudiosKey(sceneId: string): string {
+  return `${INACTIVE_AUDIOS_STORAGE_KEY}-${sceneId}`;
+}
+
+function loadInactiveAudioIds(sceneId: string): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(getInactiveAudiosKey(sceneId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveInactiveAudioIds(sceneId: string, ids: string[]): void {
+  try {
+    localStorage.setItem(getInactiveAudiosKey(sceneId), JSON.stringify(ids));
+  } catch {
+    // ignore quota / private mode
+  }
+}
 
 export default function ScenePage() {
   const params = useParams();
@@ -63,6 +89,20 @@ export default function ScenePage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const showFocusEntry = useFocusEntryOnce("scene");
 
+  // Restore disabled sounds from localStorage when entering the scene (once per scene)
+  const hydratedInactiveForScene = useRef<string | null>(null);
+  useEffect(() => {
+    if (!sceneId || audios.length === 0) return;
+    if (hydratedInactiveForScene.current === sceneId) return;
+    hydratedInactiveForScene.current = sceneId;
+    const stored = loadInactiveAudioIds(sceneId);
+    const audioIds = new Set(audios.map((a) => a.id));
+    const valid = stored.filter((id) => audioIds.has(id));
+    if (valid.length > 0) {
+      queueMicrotask(() => setInactiveAudioIds(valid));
+    }
+  }, [sceneId, audios]);
+
   const filteredAudios = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return audios;
@@ -80,11 +120,13 @@ export default function ScenePage() {
   );
 
   const toggleAudioActive = (audio: AudioItem) => {
-    setInactiveAudioIds((prev) =>
-      prev.includes(audio.id)
+    setInactiveAudioIds((prev) => {
+      const next = prev.includes(audio.id)
         ? prev.filter((id) => id !== audio.id)
-        : [...prev, audio.id],
-    );
+        : [...prev, audio.id];
+      if (sceneId) saveInactiveAudioIds(sceneId, next);
+      return next;
+    });
   };
 
   const handleAddSoundClose = useCallback(() => {
@@ -97,7 +139,8 @@ export default function ScenePage() {
 
   const handleDragStart = (e: React.DragEvent, audioId: string) => {
     const target = e.target as HTMLElement;
-    if (target.closest("button, input, [role='button'], a")) return;
+    const isDragHandle = target.closest("[data-drag-handle]");
+    if (!isDragHandle && target.closest("button, input, [role='button'], a")) return;
     setDraggedId(audioId);
     e.dataTransfer.setData("audioId", audioId);
     e.dataTransfer.effectAllowed = "move";

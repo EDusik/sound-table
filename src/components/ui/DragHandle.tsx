@@ -26,6 +26,7 @@ export function DragHandle({
   return (
     <div
       role="button"
+      data-drag-handle
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
